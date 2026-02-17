@@ -1,0 +1,157 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { observer } from 'mobx-react-lite';
+import styled from '@emotion/styled';
+import { theme } from '../styles/theme';
+import { Button, TextArea, PageWrap, Subtitle } from '../components/Button';
+import { TOPICS } from '../data/topics';
+import { gameStore } from '../stores/GameStore';
+import { hostAction } from '../engine/HostEngine';
+import { sendAction } from '../engine/ClientEngine';
+
+const TopicHeader = styled.div`
+  text-align: center;
+`;
+
+const TopicEmoji = styled.div`
+  font-size: 2rem;
+`;
+
+const TopicText = styled.h3`
+  font-size: 1.1rem;
+  margin-top: ${theme.space.xs};
+`;
+
+const Progress = styled.div`
+  color: ${theme.colors.textMuted};
+  font-size: 0.85rem;
+  text-align: center;
+`;
+
+const WaitingList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${theme.space.xs};
+  justify-content: center;
+`;
+
+const WaitingName = styled.span`
+  background: ${theme.colors.bgCard};
+  padding: ${theme.space.xs} ${theme.space.sm};
+  border-radius: ${theme.radii.sm};
+  font-size: 0.85rem;
+  color: ${theme.colors.textMuted};
+`;
+
+export const WritingPage = observer(function WritingPage() {
+  const navigate = useNavigate();
+  const { phase, config, isHost, isLeader, allWritingDone } = gameStore;
+
+  const topicIds = config.topicIds;
+
+  // On mount (including after refresh/reconnect), skip topics already submitted
+  const [currentIdx, setCurrentIdx] = useState(() => {
+    const myId = gameStore.myPlayerId;
+    const submitted = new Set(
+      gameStore.stories.filter((s) => s.authorId === myId).map((s) => s.topicId),
+    );
+    const firstMissing = topicIds.findIndex((id) => !submitted.has(id));
+    return firstMissing >= 0 ? firstMissing : topicIds.length - 1;
+  });
+
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
+  const [done, setDone] = useState(() => {
+    const myId = gameStore.myPlayerId;
+    const submitted = new Set(
+      gameStore.stories.filter((s) => s.authorId === myId).map((s) => s.topicId),
+    );
+    return topicIds.length > 0 && topicIds.every((id) => submitted.has(id));
+  });
+
+  useEffect(() => {
+    if (phase === 'PLAYING') navigate('/play');
+  }, [phase, navigate]);
+
+  const currentTopicId = topicIds[currentIdx];
+  const topic = TOPICS.find((t) => t.id === currentTopicId);
+
+  function dispatch(msg: Parameters<typeof hostAction>[0]) {
+    if (isHost) hostAction(msg);
+    else sendAction(msg);
+  }
+
+  function handleSubmit() {
+    const text = drafts[currentTopicId]?.trim();
+    if (!text) return;
+
+    dispatch({ type: 'SUBMIT_STORY', topicId: currentTopicId, text });
+    if (currentIdx < topicIds.length - 1) {
+      setCurrentIdx(currentIdx + 1);
+    } else {
+      setDone(true);
+      dispatch({ type: 'DONE_WRITING' });
+    }
+  }
+
+  function handleStartGame() {
+    dispatch({ type: 'START_GAME' });
+  }
+
+  const waitingPlayers = gameStore.players.filter(
+    (p) => p.connected && !gameStore.state.writingDone.includes(p.id),
+  );
+
+  if (done) {
+    return (
+      <PageWrap>
+        <Subtitle>All stories submitted!</Subtitle>
+        {waitingPlayers.length > 0 ? (
+          <>
+            <Progress>Waiting for:</Progress>
+            <WaitingList>
+              {waitingPlayers.map((p) => (
+                <WaitingName key={p.id}>{p.name}</WaitingName>
+              ))}
+            </WaitingList>
+          </>
+        ) : (
+          <Progress>Everyone is done! Starting soon...</Progress>
+        )}
+        {isLeader && (
+          <Button onClick={handleStartGame} disabled={!allWritingDone}>
+            {allWritingDone ? 'Start the Game!' : 'Waiting for others...'}
+          </Button>
+        )}
+      </PageWrap>
+    );
+  }
+
+  return (
+    <PageWrap>
+      <Progress>
+        Topic {currentIdx + 1} of {topicIds.length}
+      </Progress>
+
+      {topic && (
+        <TopicHeader>
+          <TopicEmoji>{topic.emoji}</TopicEmoji>
+          <TopicText>{topic.text}</TopicText>
+        </TopicHeader>
+      )}
+
+      <TextArea
+        placeholder="Write your story..."
+        value={drafts[currentTopicId] ?? ''}
+        onChange={(e) =>
+          setDrafts({ ...drafts, [currentTopicId]: e.target.value })
+        }
+        maxLength={500}
+      />
+
+      <Button onClick={handleSubmit} disabled={!drafts[currentTopicId]?.trim()}>
+        {currentIdx < topicIds.length - 1 ? 'Submit & Next' : 'Submit & Done'}
+      </Button>
+    </PageWrap>
+  );
+});
