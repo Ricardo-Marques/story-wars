@@ -22,13 +22,15 @@ export function GlobalStyles() {
           font-family: ${theme.fonts.body};
           background: ${theme.colors.bg};
           color: ${theme.colors.text};
-          min-height: 100dvh;
-          overflow-x: hidden;
+          height: 100dvh;
+          overflow: hidden;
           -webkit-font-smoothing: antialiased;
         }
 
         #root {
-          min-height: 100dvh;
+          height: 100dvh;
+          overflow-y: auto;
+          overflow-x: hidden;
           display: flex;
           flex-direction: column;
         }

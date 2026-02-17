@@ -1,11 +1,15 @@
-# Story Wars
+<p align="center">
+  <img src="public/logo.svg" alt="Story Wars" width="480" />
+</p>
 
-[![Deploy](https://github.com/Ricardo-Marques/story-wars/actions/workflows/deploy.yml/badge.svg)](https://github.com/Ricardo-Marques/story-wars/actions/workflows/deploy.yml)
-[![Playwright Tests](https://img.shields.io/badge/tests-10%20passed-brightgreen?logo=playwright&logoColor=white)](https://github.com/Ricardo-Marques/story-wars/actions/workflows/deploy.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)](https://vite.dev/)
-[![PeerJS](https://img.shields.io/badge/PeerJS-WebRTC-ff6600?logo=webrtc&logoColor=white)](https://peerjs.com/)
+<p align="center">
+  <a href="https://github.com/Ricardo-Marques/story-wars/actions/workflows/deploy.yml"><img src="https://github.com/Ricardo-Marques/story-wars/actions/workflows/deploy.yml/badge.svg" alt="Deploy" /></a>
+  <a href="https://github.com/Ricardo-Marques/story-wars/actions/workflows/deploy.yml"><img src="https://img.shields.io/badge/tests-10%20passed-brightgreen?logo=playwright&logoColor=white" alt="Playwright Tests" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.5-3178c6?logo=typescript&logoColor=white" alt="TypeScript" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white" alt="React" /></a>
+  <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white" alt="Vite" /></a>
+  <a href="https://peerjs.com/"><img src="https://img.shields.io/badge/PeerJS-WebRTC-ff6600?logo=webrtc&logoColor=white" alt="PeerJS" /></a>
+</p>
 
 A multiplayer browser party game where players write short stories around fun topics, then try to guess who wrote each one. No server required — the room creator's browser acts as the game host using peer-to-peer WebRTC connections.
 
