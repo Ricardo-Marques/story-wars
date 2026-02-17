@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { theme } from '../styles/theme';
@@ -39,96 +39,35 @@ const Cursor = styled.span`
   animation: ${blink} 0.7s step-end infinite;
 `;
 
-const CHARS_PER_SECOND = 30;
-
 interface Props {
   topicId: string;
   text: string;
   typewriter?: boolean;
-  /** Called by parent to push visible chars forward (e.g. from TTS boundary events) */
+  /** Parent drives visible character count (e.g. from TTS boundary events or fallback timer) */
   revealUpTo?: number;
   onTypewriterDone?: () => void;
 }
 
-export function StoryCard({ topicId, text, typewriter, revealUpTo, onTypewriterDone }: Props) {
+export function StoryCard({ topicId, text, typewriter, revealUpTo = 0, onTypewriterDone }: Props) {
   const topic = TOPICS.find((t) => t.id === topicId);
-  const [visibleChars, setVisibleChars] = useState(typewriter ? 0 : text.length);
-  const [done, setDone] = useState(!typewriter);
-  const fallbackTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const visibleChars = typewriter ? Math.min(revealUpTo, text.length) : text.length;
+  const done = !typewriter || visibleChars >= text.length;
+  const firedDone = useRef(false);
   const onDoneRef = useRef(onTypewriterDone);
   onDoneRef.current = onTypewriterDone;
-  // Track whether parent is driving reveal via revealUpTo
-  const parentDriving = useRef(false);
 
-  // When parent pushes revealUpTo, advance visible chars
+  // Reset when text changes (new story)
   useEffect(() => {
-    if (revealUpTo != null && revealUpTo > 0 && typewriter && !done) {
-      parentDriving.current = true;
-      setVisibleChars((prev) => Math.max(prev, revealUpTo));
-      // Kill fallback since parent is driving
-      if (fallbackTimer.current) {
-        clearInterval(fallbackTimer.current);
-        fallbackTimer.current = null;
-      }
-    }
-  }, [revealUpTo, typewriter, done]);
+    firedDone.current = false;
+  }, [text]);
 
-  // Main typewriter effect — only handles fallback timer (TTS-driven reveal comes from parent)
+  // Fire done callback once when all text is revealed
   useEffect(() => {
-    if (!typewriter) {
-      setVisibleChars(text.length);
-      setDone(true);
-      return;
-    }
-
-    setVisibleChars(0);
-    setDone(false);
-    parentDriving.current = false;
-
-    // Fallback: character-by-character timer for when TTS doesn't fire boundary events
-    const delay = 500; // give TTS a moment to start firing boundaries via parent
-    const delayId = setTimeout(() => {
-      if (parentDriving.current) return; // parent is driving, don't interfere
-      fallbackTimer.current = setInterval(() => {
-        if (parentDriving.current) {
-          if (fallbackTimer.current) {
-            clearInterval(fallbackTimer.current);
-            fallbackTimer.current = null;
-          }
-          return;
-        }
-        setVisibleChars((prev) => {
-          const next = prev + 1;
-          if (next >= text.length) {
-            if (fallbackTimer.current) {
-              clearInterval(fallbackTimer.current);
-              fallbackTimer.current = null;
-            }
-            setDone(true);
-            onDoneRef.current?.();
-            return text.length;
-          }
-          return next;
-        });
-      }, 1000 / CHARS_PER_SECOND);
-    }, delay);
-
-    return () => {
-      clearTimeout(delayId);
-      if (fallbackTimer.current) {
-        clearInterval(fallbackTimer.current);
-        fallbackTimer.current = null;
-      }
-    };
-  }, [text, typewriter]);
-
-  // Detect when revealUpTo reaches end of text (TTS finished)
-  useEffect(() => {
-    if (typewriter && !done && visibleChars >= text.length) {
-      setDone(true);
+    if (typewriter && done && !firedDone.current) {
+      firedDone.current = true;
       onDoneRef.current?.();
     }
-  }, [visibleChars, text.length, typewriter, done]);
+  }, [done, typewriter]);
 
   const displayedText = text.slice(0, visibleChars);
 

@@ -8,6 +8,8 @@ import { saveGameState, saveSession, clearGameState } from '../utils/storage';
 let voteTimer: ReturnType<typeof setTimeout> | null = null;
 let voteTimerStartedAt: number | null = null;
 let voteTimerDuration: number = 0; // seconds remaining for current timer
+let voteTimerDelayTimeout: ReturnType<typeof setTimeout> | null = null;
+let voteTimerPendingDelay = false; // true while in the pre-vote delay phase
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 
 function genId(): string {
@@ -396,6 +398,14 @@ function startVoteTimer() {
 }
 
 function pauseVoteTimer() {
+  // If still in the pre-vote delay, cancel it — timer hasn't started yet
+  if (voteTimerDelayTimeout) {
+    clearTimeout(voteTimerDelayTimeout);
+    voteTimerDelayTimeout = null;
+    // Keep voteTimerPendingDelay = true so resume knows to restart the delay
+    voteTimerDuration = getState().config.voteTimerSeconds;
+    return;
+  }
   if (voteTimer && voteTimerStartedAt) {
     clearTimeout(voteTimer);
     voteTimer = null;
@@ -406,6 +416,12 @@ function pauseVoteTimer() {
 }
 
 function resumeVoteTimer() {
+  // If paused during the pre-vote delay, restart the full timer (skip delay on resume)
+  if (voteTimerPendingDelay) {
+    voteTimerPendingDelay = false;
+    startVoteTimer();
+    return;
+  }
   if (voteTimerDuration > 0 && !voteTimer) {
     voteTimerStartedAt = Date.now();
     voteTimer = setTimeout(() => {
@@ -419,6 +435,11 @@ function resumeVoteTimer() {
 }
 
 function clearVoteTimer() {
+  if (voteTimerDelayTimeout) {
+    clearTimeout(voteTimerDelayTimeout);
+    voteTimerDelayTimeout = null;
+  }
+  voteTimerPendingDelay = false;
   if (voteTimer) {
     clearTimeout(voteTimer);
     voteTimer = null;
@@ -445,7 +466,13 @@ function handleNext(playerId: string) {
       s.playState.finalizedVoters = [];
       s.playState.voteTimerSecondsLeft = s.config.voteTimerSeconds;
     });
-    startVoteTimer();
+    // Delay timer start by 2s to give players time to see the full story
+    voteTimerPendingDelay = true;
+    voteTimerDelayTimeout = setTimeout(() => {
+      voteTimerDelayTimeout = null;
+      voteTimerPendingDelay = false;
+      startVoteTimer();
+    }, 2000);
   } else if (subPhase === 'VOTING') {
     revealAndScore();
   } else if (subPhase === 'REVEAL') {

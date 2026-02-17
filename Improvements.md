@@ -60,3 +60,19 @@ Make the following improvements
 1- Pause the game with an overlay if anyone disconnects. In that overlay there should be an option to continue without that player or leave, and if they return the game should just carry on (overlay disappears)
 
 Ask questions if you need to on how to achieve any of these requests.
+
+# Round 8
+
+Make the following improvements
+1- Add a small pause in between reading the topic and the story. 1.5 sec should be perfect.
+2- Add game rules and instructions to the home page as a link that opens an overlay, so as to not clutter the home page.
+
+Ask questions if you need to on how to achieve any of these requests.
+
+# Round 9
+
+Make the following improvements
+1- The typewritter effect should go at the same pace as TTS. It's not matching up
+2- The countdown should only start once the story has been fully ready
+
+Ask questions if you need to on how to achieve any of these requests.
