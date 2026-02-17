@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { observer } from 'mobx-react-lite'
-import styled from '@emotion/styled'
-import { theme } from '../styles/theme'
 import { Button, PageWrap, Subtitle } from '../components/Button'
 import { StoryCard } from '../components/StoryCard'
 import { VotePanel } from '../components/VotePanel'
@@ -11,112 +9,25 @@ import { gameStore } from '../stores/GameStore'
 import { hostAction } from '../engine/HostEngine'
 import { sendAction } from '../engine/ClientEngine'
 import { TOPICS } from '../data/topics'
-import { speak, stopSpeaking, isTtsEnabled, setTtsEnabled } from '../utils/tts'
 import { getAvatarDataUri } from '../utils/avatar'
 import { connectionStore } from '../stores/ConnectionStore'
-
-const RevealBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: ${theme.space.sm};
-  padding: ${theme.space.lg};
-  background: ${theme.colors.bgCard};
-  border-radius: ${theme.radii.md};
-  width: 100%;
-`
-
-const RevealAvatar = styled.img`
-  width: 56px;
-  height: 56px;
-  border-radius: ${theme.radii.full};
-`
-
-const RevealName = styled.span`
-  font-size: 1.2rem;
-  font-weight: 700;
-`
-
-const ScoreChange = styled.span<{ positive: boolean }>`
-  font-size: 0.9rem;
-  color: ${(p) => (p.positive ? theme.colors.success : theme.colors.textMuted)};
-`
-
-const TopicProgress = styled.div`
-  color: ${theme.colors.textMuted};
-  font-size: 0.8rem;
-  text-align: center;
-`
-
-const TopicTitle = styled.div`
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-align: center;
-  color: ${theme.colors.primaryLight};
-`
-
-const TopBar = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-`
-
-const MuteBtn = styled.button`
-  background: ${theme.colors.bgCard};
-  border-radius: ${theme.radii.sm};
-  padding: ${theme.space.xs} ${theme.space.sm};
-  font-size: 1.1rem;
-  color: ${theme.colors.textMuted};
-  &:hover {
-    background: ${theme.colors.bgLight};
-  }
-`
-
-const ScoreBoard = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${theme.space.xs};
-  width: 100%;
-`
-
-const ScoreRow = styled.div<{ highlighted?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: ${theme.space.sm};
-  padding: ${theme.space.sm} ${theme.space.md};
-  background: ${(p) =>
-    p.highlighted ? `${theme.colors.primary}22` : theme.colors.bgCard};
-  border-radius: ${theme.radii.sm};
-  ${(p) => p.highlighted && `border: 1px solid ${theme.colors.primary}44;`}
-`
-
-const ScoreAvatar = styled.img`
-  width: 28px;
-  height: 28px;
-  border-radius: ${theme.radii.full};
-`
-
-const ScorePlayerName = styled.span`
-  flex: 1;
-  font-size: 0.9rem;
-  font-weight: 600;
-`
-
-const ScoreDelta = styled.span`
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: ${theme.colors.success};
-  min-width: 28px;
-  text-align: right;
-`
-
-const ScoreValues = styled.span`
-  font-size: 0.85rem;
-  color: ${theme.colors.textMuted};
-  min-width: 60px;
-  text-align: right;
-`
+import { useStoryReveal } from '../hooks/useStoryReveal'
+import {
+  RevealBox,
+  RevealAvatar,
+  RevealName,
+  ScoreChange,
+  TopicProgress,
+  TopicTitle,
+  TopBar,
+  MuteBtn,
+  ScoreBoard,
+  ScoreRow,
+  ScoreAvatar,
+  ScorePlayerName,
+  ScoreDelta,
+  ScoreValues,
+} from './PlayPage.styles'
 
 export const PlayPage = observer(function PlayPage() {
   const navigate = useNavigate()
@@ -133,27 +44,21 @@ export const PlayPage = observer(function PlayPage() {
     votesForCurrentStory,
   } = gameStore
 
-  const [muted, setMuted] = useState(() => !isTtsEnabled())
-  const [typewriterDone, setTypewriterDone] = useState(false)
-  // Reveal position — driven by TTS boundaries or fallback timer
-  const [revealUpTo, setRevealUpTo] = useState(0)
-  const revealRef = useRef(0)
+  const storyKey = `${playState.currentTopicIndex}-${playState.currentStoryIndex}`
+
+  const { muted, toggleMute, typewriterDone, setTypewriterDone, revealUpTo } =
+    useStoryReveal({
+      subPhase: playState.subPhase,
+      currentStory,
+      storyKey,
+      topicIndex: playState.currentTopicIndex,
+      config,
+      isHost,
+    })
+
   // Vote timer delay: show "Time to vote!" for 2s before countdown
   const [voteTimerReady, setVoteTimerReady] = useState(false)
-  // Stable key for the current story so we know when it changes
-  const storyKey = `${playState.currentTopicIndex}-${playState.currentStoryIndex}`
-  const prevStoryKey = useRef(storyKey)
   const prevSubPhase = useRef(playState.subPhase)
-
-  // Reset state when story changes
-  useEffect(() => {
-    if (prevStoryKey.current !== storyKey) {
-      prevStoryKey.current = storyKey
-      setTypewriterDone(false)
-      setRevealUpTo(0)
-      revealRef.current = 0
-    }
-  }, [storyKey])
 
   // Delay vote timer display by 2s after entering VOTING from READING
   useEffect(() => {
@@ -178,104 +83,6 @@ export const PlayPage = observer(function PlayPage() {
   useEffect(() => {
     if (phase === 'RESULTS') navigate('/results')
   }, [phase, navigate])
-
-  // TTS & typewriter reveal — reads the topic first, pauses 1s, then reveals the story
-  useEffect(() => {
-    if (playState.subPhase !== 'READING' || !currentStory) return
-
-    let cancelled = false
-    let pauseTimer: ReturnType<typeof setTimeout> | null = null
-    let fallbackInterval: ReturnType<typeof setInterval> | null = null
-    let safetyTimeout: ReturnType<typeof setTimeout> | null = null
-
-    const topicId = config.topicIds[playState.currentTopicIndex]
-    const topicMeta = TOPICS.find((t) => t.id === topicId)
-    const topicText = topicMeta
-      ? `Topic ${playState.currentTopicIndex + 1}: ${topicMeta.text}`
-      : ''
-
-    const ttsOn = isTtsEnabled() && revealRef.current === 0
-
-    if (ttsOn) {
-      // Safety: force-complete reveal if TTS gets stuck (known browser bug)
-      // Generous estimate: ~3 chars/sec speech + topic time + pauses + 10s buffer
-      const safetyMs = Math.min(
-        (topicText.length + currentStory.text.length) * 100 + 5000,
-        30000
-      )
-      safetyTimeout = setTimeout(() => {
-        if (!cancelled && currentStory) {
-          setRevealUpTo(currentStory.text.length)
-        }
-      }, safetyMs)
-
-      // TTS enabled: speak topic → pause → speak story with boundary-driven reveal
-      speak(topicText, {
-        onEnd: () => {
-          if (cancelled) return
-          pauseTimer = setTimeout(() => {
-            if (cancelled || !currentStory) return
-            speak(currentStory.text, {
-              onBoundary: (charIndex, charLength) => {
-                const pos = charIndex + charLength
-                if (pos > revealRef.current) {
-                  revealRef.current = pos
-                  setRevealUpTo(pos)
-                }
-              },
-              onEnd: () => {
-                if (currentStory) {
-                  revealRef.current = currentStory.text.length
-                  setRevealUpTo(currentStory.text.length)
-                }
-              },
-            })
-          }, 1000)
-        },
-      })
-    } else {
-      // TTS muted: reveal story text with a local timer
-      const CHARS_PER_SECOND = 30
-      let revealed = revealRef.current
-      fallbackInterval = setInterval(() => {
-        if (cancelled) return
-        revealed += 1
-        revealRef.current = revealed
-        setRevealUpTo(revealed)
-        if (currentStory && revealed >= currentStory.text.length) {
-          if (fallbackInterval) {
-            clearInterval(fallbackInterval)
-            fallbackInterval = null
-          }
-        }
-      }, 1000 / CHARS_PER_SECOND)
-    }
-
-    return () => {
-      cancelled = true
-      if (pauseTimer) clearTimeout(pauseTimer)
-      if (fallbackInterval) clearInterval(fallbackInterval)
-      if (safetyTimeout) clearTimeout(safetyTimeout)
-      stopSpeaking()
-    }
-  }, [storyKey, muted]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-advance from READING → VOTING once typewriter finishes (host only)
-  useEffect(() => {
-    if (playState.subPhase === 'READING' && typewriterDone && isHost) {
-      const timer = setTimeout(() => {
-        hostAction({ type: 'NEXT' })
-      }, 1500)
-      return () => clearTimeout(timer)
-    }
-  }, [playState.subPhase, typewriterDone, isHost])
-
-  function toggleMute() {
-    const newMuted = !muted
-    setMuted(newMuted)
-    setTtsEnabled(!newMuted)
-    if (newMuted) stopSpeaking()
-  }
 
   function dispatch(msg: Parameters<typeof hostAction>[0]) {
     if (isHost) hostAction(msg)

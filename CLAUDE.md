@@ -28,24 +28,33 @@ No test framework is configured yet.
 ```
 src/
 ├── engine/          # Game logic (host-authority model)
-│   ├── HostEngine.ts    # State machine, scoring, timers, broadcasts state
+│   ├── hostCore.ts      # Shared infra: genId, broadcastState, getState, mutate, shuffle
+│   ├── hostTimers.ts    # Timer management: heartbeat, reading timeout, vote timer
+│   ├── HostEngine.ts    # Handlers, init, public API (imports hostCore + hostTimers)
 │   └── ClientEngine.ts  # Receives state updates, sends actions to host
 ├── stores/          # MobX singleton stores
 │   ├── GameStore.ts     # Observable game state + computed derived values
-│   └── ConnectionStore.ts # PeerJS peer lifecycle, connection maps
+│   ├── connectionSetup.ts  # Host/client peer creation and connection wiring
+│   ├── connectionUtils.ts  # Auto-reconnect loop, peer recovery helpers
+│   └── ConnectionStore.ts  # Lean MobX store, delegates to setup/utils
 ├── types/           # TypeScript types
 │   ├── game.ts          # Player, GameState, GameConfig, GamePhase, etc.
 │   └── protocol.ts      # ClientMessage / HostMessage discriminated unions
 ├── pages/           # Route components (one per game phase)
-│   ├── HomePage.tsx     # Create/join room
+│   ├── HomePage.tsx     # Create/join room (logic + render)
+│   ├── HomePage.styles.ts  # Styled components for HomePage
 │   ├── LobbyPage.tsx    # Waiting room
 │   ├── SetupPage.tsx    # Topic selection + config (leader only)
 │   ├── WritingPage.tsx  # Story input
-│   ├── PlayPage.tsx     # Reading → Voting → Reveal cycle
+│   ├── PlayPage.tsx     # Reading → Voting → Reveal cycle (logic + render)
+│   ├── PlayPage.styles.ts  # Styled components for PlayPage
 │   └── ResultsPage.tsx  # Final scoreboard
+├── hooks/           # React hooks
+│   └── useStoryReveal.ts   # TTS + typewriter reveal logic for PlayPage
 ├── components/      # Reusable UI
 │   ├── Button.tsx       # Shared primitives: Button, Input, TextArea, Card, PageWrap, Subtitle
 │   ├── PhaseRouter.tsx  # Auto-navigates based on gameStore.phase
+│   ├── RulesModal.tsx   # How to Play overlay
 │   └── ...              # AvatarPicker, TopicSelector, StoryCard, VotePanel, etc.
 ├── styles/
 │   ├── theme.ts         # Color palette, spacing, radii tokens
@@ -71,7 +80,7 @@ Phases defined at `src/types/game.ts:1-3`. Transitions controlled by HostEngine.
 - **Dual dispatch**: Pages call `hostAction(msg)` if host, `sendAction(msg)` if client — same message type either way
 - **Full state sync**: No diffs — every STATE_UPDATE sends the complete GameState object
 - **Leader guards**: Config changes and phase advances require `player.isLeader` (first player to join)
-- **Scoring**: +2 for correct guess, +3 for author when nobody guesses right (`src/engine/HostEngine.ts:134`)
+- **Scoring**: +2 for correct guess, +3 for author when nobody guesses right (`src/engine/HostEngine.ts:386`)
 
 ## Additional Documentation
 

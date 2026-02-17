@@ -3,102 +3,21 @@ import { gameStore } from '../stores/GameStore';
 import { createInitialState, INITIAL_PLAY_STATE } from '../types/game';
 import type { GameState, Player, Story } from '../types/game';
 import type { ClientMessage } from '../types/protocol';
-import { saveGameState, saveSession, clearGameState } from '../utils/storage';
-
-let voteTimer: ReturnType<typeof setTimeout> | null = null;
-let voteTimerStartedAt: number | null = null;
-let voteTimerDuration: number = 0; // seconds remaining for current timer
-let voteTimerDelayTimeout: ReturnType<typeof setTimeout> | null = null;
-let voteTimerPendingDelay = false; // true while in the pre-vote delay phase
-let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
-let readingTimeout: ReturnType<typeof setTimeout> | null = null;
-
-function genId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-}
-
-function broadcastState(state: GameState) {
-  connectionStore.broadcast({ type: 'STATE_UPDATE', state });
-  gameStore.setState(state);
-  saveGameState(state);
-}
-
-function getState(): GameState {
-  return gameStore.state;
-}
-
-function mutate(fn: (s: GameState) => void) {
-  const state = JSON.parse(JSON.stringify(getState())) as GameState;
-  fn(state);
-  broadcastState(state);
-}
-
-function hasUnresolvedDisconnects(): boolean {
-  const state = getState();
-  const excluded = state.excludedPlayers || [];
-  return state.players.some((p) => !p.connected && !excluded.includes(p.id));
-}
-
-// Compute current vote timer remaining and inject into a state clone (for WELCOME)
-function getStateWithTimerSync(): GameState {
-  const state = JSON.parse(JSON.stringify(getState())) as GameState;
-  if (state.phase === 'PLAYING' && state.playState.subPhase === 'VOTING') {
-    if (voteTimerStartedAt) {
-      const elapsed = (Date.now() - voteTimerStartedAt) / 1000;
-      state.playState.voteTimerSecondsLeft = Math.max(1, Math.round(voteTimerDuration - elapsed));
-    } else if (voteTimerDuration > 0) {
-      state.playState.voteTimerSecondsLeft = Math.round(voteTimerDuration);
-    }
-  }
-  return state;
-}
-
-// --- Heartbeat ---
-
-function startHeartbeat() {
-  stopHeartbeat();
-  heartbeatInterval = setInterval(() => {
-    connectionStore.broadcast({ type: 'PING' });
-  }, 5000);
-}
-
-function stopHeartbeat() {
-  if (heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    heartbeatInterval = null;
-  }
-}
-
-// --- Reading timeout (host-side safety net) ---
-
-function startReadingTimeout() {
-  clearReadingTimeout();
-  readingTimeout = setTimeout(() => {
-    readingTimeout = null;
-    const state = getState();
-    if (state.phase === 'PLAYING' && state.playState.subPhase === 'READING') {
-      // Auto-advance to VOTING — same as handleNext when subPhase is READING
-      mutate((s) => {
-        s.playState.subPhase = 'VOTING';
-        s.playState.finalizedVoters = [];
-        s.playState.voteTimerSecondsLeft = s.config.voteTimerSeconds;
-      });
-      voteTimerPendingDelay = true;
-      voteTimerDelayTimeout = setTimeout(() => {
-        voteTimerDelayTimeout = null;
-        voteTimerPendingDelay = false;
-        startVoteTimer();
-      }, 2000);
-    }
-  }, 45000);
-}
-
-function clearReadingTimeout() {
-  if (readingTimeout) {
-    clearTimeout(readingTimeout);
-    readingTimeout = null;
-  }
-}
+import { saveSession, clearGameState } from '../utils/storage';
+import { genId, getState, mutate, hasUnresolvedDisconnects, shuffle } from './hostCore';
+import {
+  startHeartbeat,
+  stopHeartbeat,
+  startReadingTimeout,
+  clearReadingTimeout,
+  startVoteTimer,
+  pauseVoteTimer,
+  resumeVoteTimer,
+  clearVoteTimer,
+  setVoteTimerPendingDelay,
+  setVoteTimerDelayTimeout,
+  getStateWithTimerSync,
+} from './hostTimers';
 
 // --- Init ---
 
@@ -341,7 +260,7 @@ function startGame() {
     }
     s.stories = kept;
   });
-  startReadingTimeout();
+  startReadingTimeout(readingExpired);
 }
 
 function handleStartGame(playerId: string) {
@@ -415,71 +334,25 @@ function checkAllFinalized() {
   }
 }
 
-// --- Vote timer with pause/resume ---
+// --- Callbacks for timer expiry ---
 
-function startVoteTimer() {
-  const seconds = getState().config.voteTimerSeconds;
-  voteTimerDuration = seconds;
-  voteTimerStartedAt = Date.now();
-  voteTimer = setTimeout(() => {
-    voteTimer = null;
-    voteTimerStartedAt = null;
-    if (getState().playState.subPhase === 'VOTING') {
-      revealAndScore();
-    }
-  }, seconds * 1000);
+function readingExpired() {
+  // Auto-advance to VOTING — same as handleNext when subPhase is READING
+  mutate((s) => {
+    s.playState.subPhase = 'VOTING';
+    s.playState.finalizedVoters = [];
+    s.playState.voteTimerSecondsLeft = s.config.voteTimerSeconds;
+  });
+  startVoteTimerWithDelay();
 }
 
-function pauseVoteTimer() {
-  // If still in the pre-vote delay, cancel it — timer hasn't started yet
-  if (voteTimerDelayTimeout) {
-    clearTimeout(voteTimerDelayTimeout);
-    voteTimerDelayTimeout = null;
-    // Keep voteTimerPendingDelay = true so resume knows to restart the delay
-    voteTimerDuration = getState().config.voteTimerSeconds;
-    return;
-  }
-  if (voteTimer && voteTimerStartedAt) {
-    clearTimeout(voteTimer);
-    voteTimer = null;
-    const elapsed = (Date.now() - voteTimerStartedAt) / 1000;
-    voteTimerDuration = Math.max(0, voteTimerDuration - elapsed);
-    voteTimerStartedAt = null;
-  }
-}
-
-function resumeVoteTimer() {
-  // If paused during the pre-vote delay, restart the full timer (skip delay on resume)
-  if (voteTimerPendingDelay) {
-    voteTimerPendingDelay = false;
-    startVoteTimer();
-    return;
-  }
-  if (voteTimerDuration > 0 && !voteTimer) {
-    voteTimerStartedAt = Date.now();
-    voteTimer = setTimeout(() => {
-      voteTimer = null;
-      voteTimerStartedAt = null;
-      if (getState().playState.subPhase === 'VOTING') {
-        revealAndScore();
-      }
-    }, voteTimerDuration * 1000);
-  }
-}
-
-function clearVoteTimer() {
-  if (voteTimerDelayTimeout) {
-    clearTimeout(voteTimerDelayTimeout);
-    voteTimerDelayTimeout = null;
-  }
-  voteTimerPendingDelay = false;
-  if (voteTimer) {
-    clearTimeout(voteTimer);
-    voteTimer = null;
-  }
-  voteTimerStartedAt = null;
-  voteTimerDuration = 0;
-  clearReadingTimeout();
+function startVoteTimerWithDelay() {
+  setVoteTimerPendingDelay(true);
+  setVoteTimerDelayTimeout(setTimeout(() => {
+    setVoteTimerDelayTimeout(null);
+    setVoteTimerPendingDelay(false);
+    startVoteTimer(() => revealAndScore());
+  }, 2000));
 }
 
 // --- Next / Reveal / Advance ---
@@ -502,12 +375,7 @@ function handleNext(playerId: string) {
       s.playState.voteTimerSecondsLeft = s.config.voteTimerSeconds;
     });
     // Delay timer start by 2s to give players time to see the full story
-    voteTimerPendingDelay = true;
-    voteTimerDelayTimeout = setTimeout(() => {
-      voteTimerDelayTimeout = null;
-      voteTimerPendingDelay = false;
-      startVoteTimer();
-    }, 2000);
+    startVoteTimerWithDelay();
   } else if (subPhase === 'VOTING') {
     revealAndScore();
   } else if (subPhase === 'REVEAL') {
@@ -560,7 +428,7 @@ function advanceToNextStory() {
       s.playState.revealedAuthorId = null;
       s.playState.finalizedVoters = [];
     });
-    startReadingTimeout();
+    startReadingTimeout(readingExpired);
   } else {
     const nextTopicIndex = state.playState.currentTopicIndex + 1;
     if (nextTopicIndex < state.config.topicIds.length) {
@@ -571,7 +439,7 @@ function advanceToNextStory() {
         s.playState.revealedAuthorId = null;
         s.playState.finalizedVoters = [];
       });
-      startReadingTimeout();
+      startReadingTimeout(readingExpired);
     } else {
       mutate((s) => {
         s.phase = 'RESULTS';
@@ -602,7 +470,7 @@ function handleContinueWithout(playerId: string, targetPlayerId: string) {
       checkAutoStartGame();
     }
     if (state.phase === 'PLAYING' && state.playState.subPhase === 'VOTING') {
-      resumeVoteTimer();
+      resumeVoteTimer(() => revealAndScore());
       checkAllFinalized();
     }
   }
@@ -636,7 +504,7 @@ function checkAfterReconnect() {
       checkAutoStartGame();
     }
     if (state.phase === 'PLAYING' && state.playState.subPhase === 'VOTING') {
-      resumeVoteTimer();
+      resumeVoteTimer(() => revealAndScore());
       checkAllFinalized();
     }
   }
@@ -705,11 +573,4 @@ export function hostEndGame() {
     connectionStore.disconnect();
     gameStore.reset();
   }, 300);
-}
-
-function shuffle<T>(arr: T[]): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
 }

@@ -80,19 +80,27 @@ State flows one way: **Player action -> Host engine -> Full state broadcast -> A
 ```
 src/
 ├── engine/          # Game logic (host-authority model)
-│   ├── HostEngine.ts    # State machine, scoring, timers, broadcasts
+│   ├── hostCore.ts      # Shared infra: mutate, broadcast, state access
+│   ├── hostTimers.ts    # Timer management: heartbeat, reading, vote
+│   ├── HostEngine.ts    # Handlers, init, public API
 │   └── ClientEngine.ts  # Receives state, sends actions to host
 ├── stores/          # MobX singleton stores
 │   ├── GameStore.ts     # Observable game state + computed values
-│   └── ConnectionStore.ts # PeerJS peer lifecycle
+│   ├── connectionSetup.ts  # Host/client peer creation
+│   ├── connectionUtils.ts  # Auto-reconnect loop helpers
+│   └── ConnectionStore.ts  # PeerJS peer lifecycle (lean store)
 ├── pages/           # Route components (one per game phase)
 │   ├── HomePage.tsx     # Create/join room
+│   ├── HomePage.styles.ts  # Styled components for HomePage
 │   ├── LobbyPage.tsx    # Waiting room + invite sharing
 │   ├── SetupPage.tsx    # Topic selection + config
 │   ├── WritingPage.tsx  # Story input
 │   ├── PlayPage.tsx     # Reading, voting, reveal cycle
+│   ├── PlayPage.styles.ts  # Styled components for PlayPage
 │   └── ResultsPage.tsx  # Final scoreboard
-├── components/      # Reusable UI (Button, StoryCard, VotePanel, etc.)
+├── hooks/           # React hooks
+│   └── useStoryReveal.ts   # TTS + typewriter reveal logic
+├── components/      # Reusable UI (Button, StoryCard, VotePanel, RulesModal, etc.)
 ├── types/           # TypeScript types (game state, protocol messages)
 ├── styles/          # Theme tokens + CSS reset
 ├── data/            # 50 built-in story topics
