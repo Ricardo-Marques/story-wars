@@ -38,8 +38,9 @@ const Badge = styled.span`
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: ${theme.radii.full};
-  background: ${theme.colors.primaryLight}33;
-  color: ${theme.colors.primaryLight};
+  background: ${theme.colors.primaryLight};
+  color: ${theme.colors.text};
+  font-weight: 600;
   letter-spacing: 0.3px;
 `;
 

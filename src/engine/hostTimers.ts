@@ -36,7 +36,7 @@ export function startReadingTimeout(onExpire: () => void) {
     if (state.phase === 'PLAYING' && state.playState.subPhase === 'READING') {
       onExpire();
     }
-  }, 45000);
+  }, 20000);
 }
 
 export function clearReadingTimeout() {

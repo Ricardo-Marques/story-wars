@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import styled from '@emotion/styled';
@@ -9,6 +8,7 @@ import { gameStore } from '../stores/GameStore';
 import { connectionStore } from '../stores/ConnectionStore';
 import { clearGameState } from '../utils/storage';
 import { hostPlayAgain } from '../engine/HostEngine';
+import { useReaction } from '../utils/mobx';
 
 const Info = styled.p`
   color: ${theme.colors.textMuted};
@@ -25,13 +25,12 @@ const Actions = styled.div`
 
 export const ResultsPage = observer(function ResultsPage() {
   const navigate = useNavigate();
-  const { players, isLeader, phase } = gameStore;
+  const { players, isLeader } = gameStore;
 
-  // If leader starts a new game, phase changes to SETUP — PhaseRouter handles navigation
-  // But non-leaders need to react too
-  useEffect(() => {
-    if (phase === 'SETUP') navigate('/setup');
-  }, [phase, navigate]);
+  useReaction(
+    () => gameStore.phase,
+    (p) => { if (p === 'SETUP') navigate('/setup'); },
+  );
 
   const sorted = [...players].sort((a, b) => b.score - a.score);
   const topScore = sorted[0]?.score ?? 0;

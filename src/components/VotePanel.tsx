@@ -64,11 +64,11 @@ const LockBtn = styled.button`
   }
 `;
 
-const FinalizedLabel = styled.div`
-  font-size: 0.85rem;
+const LockedBadge = styled.span`
+  font-size: 0.8rem;
   color: ${theme.colors.success};
-  text-align: center;
   font-weight: 600;
+  white-space: nowrap;
 `;
 
 interface Props {
@@ -96,11 +96,11 @@ export function VotePanel({ players, myVoteTargetId, finalized, onVote, onFinali
           {myVoteTargetId === p.id && !finalized && (
             <LockBtn onClick={onFinalize}>Lock In</LockBtn>
           )}
+          {myVoteTargetId === p.id && finalized && (
+            <LockedBadge>✓ Locked</LockedBadge>
+          )}
         </VoteRow>
       ))}
-      {finalized && (
-        <FinalizedLabel>Vote locked in! Waiting for others...</FinalizedLabel>
-      )}
     </Panel>
   );
 }

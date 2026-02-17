@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import styled from '@emotion/styled';
@@ -9,6 +8,7 @@ import { gameStore } from '../stores/GameStore';
 import { hostAction } from '../engine/HostEngine';
 import { sendAction } from '../engine/ClientEngine';
 import { LeaveGameButton } from '../components/LeaveGameButton';
+import { useReaction, useLocalObservable } from '../utils/mobx';
 
 const TopicHeader = styled.div`
   text-align: center;
@@ -47,35 +47,28 @@ const WaitingName = styled.span`
 
 export const WritingPage = observer(function WritingPage() {
   const navigate = useNavigate();
-  const { phase, config, isHost, isLeader, allWritingDone } = gameStore;
-
+  const { config, isHost, isLeader, allWritingDone } = gameStore;
   const topicIds = config.topicIds;
 
-  // On mount (including after refresh/reconnect), skip topics already submitted
-  const [currentIdx, setCurrentIdx] = useState(() => {
+  const local = useLocalObservable(() => {
     const myId = gameStore.myPlayerId;
     const submitted = new Set(
       gameStore.stories.filter((s) => s.authorId === myId).map((s) => s.topicId),
     );
     const firstMissing = topicIds.findIndex((id) => !submitted.has(id));
-    return firstMissing >= 0 ? firstMissing : topicIds.length - 1;
+    return {
+      currentIdx: firstMissing >= 0 ? firstMissing : topicIds.length - 1,
+      drafts: {} as Record<string, string>,
+      done: topicIds.length > 0 && topicIds.every((id) => submitted.has(id)),
+    };
   });
 
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  useReaction(
+    () => gameStore.phase,
+    (p) => { if (p === 'PLAYING') navigate('/play'); },
+  );
 
-  const [done, setDone] = useState(() => {
-    const myId = gameStore.myPlayerId;
-    const submitted = new Set(
-      gameStore.stories.filter((s) => s.authorId === myId).map((s) => s.topicId),
-    );
-    return topicIds.length > 0 && topicIds.every((id) => submitted.has(id));
-  });
-
-  useEffect(() => {
-    if (phase === 'PLAYING') navigate('/play');
-  }, [phase, navigate]);
-
-  const currentTopicId = topicIds[currentIdx];
+  const currentTopicId = topicIds[local.currentIdx];
   const topic = TOPICS.find((t) => t.id === currentTopicId);
 
   function dispatch(msg: Parameters<typeof hostAction>[0]) {
@@ -84,14 +77,14 @@ export const WritingPage = observer(function WritingPage() {
   }
 
   function handleSubmit() {
-    const text = drafts[currentTopicId]?.trim();
+    const text = local.drafts[currentTopicId]?.trim();
     if (!text) return;
 
     dispatch({ type: 'SUBMIT_STORY', topicId: currentTopicId, text });
-    if (currentIdx < topicIds.length - 1) {
-      setCurrentIdx(currentIdx + 1);
+    if (local.currentIdx < topicIds.length - 1) {
+      local.currentIdx += 1;
     } else {
-      setDone(true);
+      local.done = true;
       dispatch({ type: 'DONE_WRITING' });
     }
   }
@@ -104,7 +97,7 @@ export const WritingPage = observer(function WritingPage() {
     (p) => p.connected && !gameStore.state.writingDone.includes(p.id),
   );
 
-  if (done) {
+  if (local.done) {
     return (
       <PageWrap>
         <Subtitle>All stories submitted!</Subtitle>
@@ -134,7 +127,7 @@ export const WritingPage = observer(function WritingPage() {
   return (
     <PageWrap>
       <Progress>
-        Topic {currentIdx + 1} of {topicIds.length}
+        Topic {local.currentIdx + 1} of {topicIds.length}
       </Progress>
 
       {topic && (
@@ -146,15 +139,13 @@ export const WritingPage = observer(function WritingPage() {
 
       <TextArea
         placeholder="Write your story..."
-        value={drafts[currentTopicId] ?? ''}
-        onChange={(e) =>
-          setDrafts({ ...drafts, [currentTopicId]: e.target.value })
-        }
+        value={local.drafts[currentTopicId] ?? ''}
+        onChange={(e) => (local.drafts[currentTopicId] = e.target.value)}
         maxLength={500}
       />
 
-      <Button onClick={handleSubmit} disabled={!drafts[currentTopicId]?.trim()}>
-        {currentIdx < topicIds.length - 1 ? 'Submit & Next' : 'Submit & Done'}
+      <Button onClick={handleSubmit} disabled={!local.drafts[currentTopicId]?.trim()}>
+        {local.currentIdx < topicIds.length - 1 ? 'Submit & Next' : 'Submit & Done'}
       </Button>
 
       <LeaveGameButton />

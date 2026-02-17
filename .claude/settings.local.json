@@ -4,7 +4,13 @@
       "Bash(npm install)",
       "Bash(npx tsc:*)",
       "Bash(npm install:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "Bash(npx playwright test:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }

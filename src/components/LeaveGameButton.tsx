@@ -15,8 +15,7 @@ const Wrapper = styled.div`
   flex-direction: column;
   align-items: center;
   gap: ${theme.space.sm};
-  margin-top: auto;
-  padding-top: ${theme.space.md};
+  padding-top: ${theme.space.sm};
 `;
 
 const ConfirmRow = styled.div`

@@ -8,13 +8,14 @@ import { PlayerList } from '../components/PlayerList';
 import { gameStore } from '../stores/GameStore';
 import { hostAdvanceToSetup } from '../engine/HostEngine';
 import { LeaveGameButton } from '../components/LeaveGameButton';
+import { useReaction } from '../utils/mobx';
 
 const CodeBox = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.space.md};
   background: ${theme.colors.bgCard};
-  border: 1px solid ${theme.colors.textMuted}11;
+  border: 2px solid ${theme.colors.secondary}33;
   padding: ${theme.space.md} ${theme.space.lg};
   border-radius: ${theme.radii.md};
 `;
@@ -23,7 +24,7 @@ const Code = styled.span`
   font-size: 1.8rem;
   font-weight: 800;
   letter-spacing: 4px;
-  color: ${theme.colors.primaryLight};
+  color: ${theme.colors.secondary};
 `;
 
 const ShareRow = styled.div`
@@ -33,7 +34,25 @@ const ShareRow = styled.div`
   justify-content: center;
 `;
 
-const ShareBtn = styled.button`
+const CopyBtn = styled.button`
+  padding: ${theme.space.sm} ${theme.space.lg};
+  border-radius: ${theme.radii.md};
+  color: ${theme.colors.bg};
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: ${theme.colors.secondary};
+  transition: all 0.2s ease;
+  &:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+  }
+`;
+
+const NativeShareBtn = styled.button`
   padding: ${theme.space.sm} ${theme.space.lg};
   border-radius: ${theme.radii.md};
   color: ${theme.colors.text};
@@ -43,7 +62,7 @@ const ShareBtn = styled.button`
   display: flex;
   align-items: center;
   gap: 6px;
-  background: ${theme.colors.primary};
+  background: ${theme.colors.primaryLight};
   transition: all 0.2s ease;
   &:hover {
     opacity: 0.85;
@@ -51,14 +70,17 @@ const ShareBtn = styled.button`
   }
 `;
 
+const PlayerCount = styled.p`
+  color: ${theme.colors.warning};
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+`;
+
 const Info = styled.p`
   color: ${theme.colors.textMuted};
   font-size: 0.85rem;
   text-align: center;
-`;
-
-const CopiedFeedback = styled.span`
-  color: ${theme.colors.success};
 `;
 
 const CopiedBanner = styled.div`
@@ -80,13 +102,14 @@ function getJoinUrl(roomCode: string, hostName?: string) {
 
 export const LobbyPage = observer(function LobbyPage() {
   const navigate = useNavigate();
-  const { phase, roomCode, players, isLeader, isHost } = gameStore;
+  const { roomCode, players, isLeader, isHost } = gameStore;
   const leaderName = players.find((p) => p.isLeader)?.name;
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (phase === 'SETUP') navigate('/setup');
-  }, [phase, navigate]);
+  useReaction(
+    () => gameStore.phase,
+    (p) => { if (p === 'SETUP') navigate('/setup'); },
+  );
 
   // Auto-copy link when lobby first loads (host created the room)
   useEffect(() => {
@@ -140,17 +163,21 @@ export const LobbyPage = observer(function LobbyPage() {
       {copied && <CopiedBanner>Invite link copied to clipboard!</CopiedBanner>}
 
       <ShareRow>
-        <ShareBtn onClick={copyLink}>
-          {copied ? <CopiedFeedback>Copied!</CopiedFeedback> : 'Copy Link'}
-        </ShareBtn>
-        <ShareBtn onClick={nativeShare}>
-          Share Link
-        </ShareBtn>
+        <CopyBtn onClick={copyLink}>
+          {copied ? '✓ Copied!' : 'Copy Link'}
+        </CopyBtn>
+        {typeof navigator.share === 'function' && (
+          <NativeShareBtn onClick={nativeShare}>
+            Share Link
+          </NativeShareBtn>
+        )}
       </ShareRow>
 
-      <Info>{players.length} player{players.length !== 1 ? 's' : ''} in room</Info>
+      <PlayerCount>{players.length} player{players.length !== 1 ? 's' : ''} in room</PlayerCount>
 
       <PlayerList players={players} />
+
+      <LeaveGameButton />
 
       {isLeader && (
         <Button
@@ -162,8 +189,6 @@ export const LobbyPage = observer(function LobbyPage() {
       )}
 
       {!isLeader && <Info>Waiting for the leader to start...</Info>}
-
-      <LeaveGameButton />
     </PageWrap>
   );
 });

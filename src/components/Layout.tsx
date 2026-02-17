@@ -8,7 +8,7 @@ const Shell = styled.div`
   flex-direction: column;
   align-items: center;
   min-height: 100%;
-  padding: ${theme.space.lg} ${theme.space.md} ${theme.space.md};
+  padding: ${theme.space.lg} ${theme.space.md} ${theme.space.xxl};
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
@@ -28,9 +28,9 @@ const LogoWrap = styled.div`
 
 const Tagline = styled.p`
   color: ${theme.colors.textMuted};
-  font-size: 0.75rem;
-  letter-spacing: 1.5px;
-  font-weight: 300;
+  font-size: 0.95rem;
+  letter-spacing: 1.6px;
+  font-weight: 500;
   margin-bottom: ${theme.space.lg};
 `;
 

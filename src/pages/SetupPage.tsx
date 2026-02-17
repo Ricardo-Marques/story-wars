@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import styled from '@emotion/styled';
@@ -9,6 +8,7 @@ import { gameStore } from '../stores/GameStore';
 import { hostAction } from '../engine/HostEngine';
 import { sendAction } from '../engine/ClientEngine';
 import { LeaveGameButton } from '../components/LeaveGameButton';
+import { useReaction, useLocalObservable } from '../utils/mobx';
 
 const Controls = styled.div`
   display: flex;
@@ -53,20 +53,23 @@ function formatTime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  return `${m}m ${s.toString().padStart(2, '0')}s`;
 }
 
 export const SetupPage = observer(function SetupPage() {
   const navigate = useNavigate();
-  const { phase, isLeader, isHost, config, players } = gameStore;
+  const { isLeader, isHost, config, players } = gameStore;
 
-  const [selectedTopics, setSelectedTopics] = useState<string[]>(config.topicIds);
-  const [storiesPerPrompt, setStoriesPerPrompt] = useState(config.storiesPerPrompt);
-  const [voteTimer, setVoteTimer] = useState(config.voteTimerSeconds);
+  const local = useLocalObservable(() => ({
+    selectedTopics: config.topicIds as string[],
+    storiesPerPrompt: config.storiesPerPrompt,
+    voteTimer: config.voteTimerSeconds,
+  }));
 
-  useEffect(() => {
-    if (phase === 'WRITING') navigate('/writing');
-  }, [phase, navigate]);
+  useReaction(
+    () => gameStore.phase,
+    (p) => { if (p === 'WRITING') navigate('/writing'); },
+  );
 
   function sendConfig(topics: string[], spp: number, vt: number) {
     const msg = {
@@ -83,8 +86,8 @@ export const SetupPage = observer(function SetupPage() {
   }
 
   function handleTopicsChange(ids: string[]) {
-    setSelectedTopics(ids);
-    sendConfig(ids, storiesPerPrompt, voteTimer);
+    local.selectedTopics = ids;
+    sendConfig(ids, local.storiesPerPrompt, local.voteTimer);
   }
 
   function handleStartWriting() {
@@ -125,7 +128,7 @@ export const SetupPage = observer(function SetupPage() {
     <PageWrap>
       <Subtitle>Pick topics for this round</Subtitle>
 
-      <TopicSelector selected={selectedTopics} onChange={handleTopicsChange} />
+      <TopicSelector selected={local.selectedTopics} onChange={handleTopicsChange} />
 
       <Controls>
         <SliderRow>
@@ -134,14 +137,14 @@ export const SetupPage = observer(function SetupPage() {
             type="range"
             min={1}
             max={players.length}
-            value={storiesPerPrompt}
+            value={local.storiesPerPrompt}
             onChange={(e) => {
               const v = Number(e.target.value);
-              setStoriesPerPrompt(v);
-              sendConfig(selectedTopics, v, voteTimer);
+              local.storiesPerPrompt = v;
+              sendConfig(local.selectedTopics, v, local.voteTimer);
             }}
           />
-          <Value>{storiesPerPrompt}</Value>
+          <Value>{local.storiesPerPrompt}</Value>
         </SliderRow>
 
         <SliderRow>
@@ -151,19 +154,19 @@ export const SetupPage = observer(function SetupPage() {
             min={10}
             max={600}
             step={10}
-            value={voteTimer}
+            value={local.voteTimer}
             onChange={(e) => {
               const v = Number(e.target.value);
-              setVoteTimer(v);
-              sendConfig(selectedTopics, storiesPerPrompt, v);
+              local.voteTimer = v;
+              sendConfig(local.selectedTopics, local.storiesPerPrompt, v);
             }}
           />
-          <Value>{formatTime(voteTimer)}</Value>
+          <Value>{formatTime(local.voteTimer)}</Value>
         </SliderRow>
       </Controls>
 
-      <Button onClick={handleStartWriting} disabled={selectedTopics.length === 0}>
-        {selectedTopics.length === 0 ? 'Select at least 1 topic' : 'Start Writing!'}
+      <Button onClick={handleStartWriting} disabled={local.selectedTopics.length === 0}>
+        {local.selectedTopics.length === 0 ? 'Select at least 1 topic' : 'Start Writing!'}
       </Button>
 
       <LeaveGameButton />

@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { observer } from 'mobx-react-lite'
+import { useLocalObservable, useReaction } from '../utils/mobx'
 import { Button, PageWrap, Subtitle } from '../components/Button'
 import { StoryCard } from '../components/StoryCard'
 import { VotePanel } from '../components/VotePanel'
@@ -45,45 +46,47 @@ export const PlayPage = observer(function PlayPage() {
     votesForCurrentStory,
   } = gameStore
 
-  const storyKey = `${playState.currentTopicIndex}-${playState.currentStoryIndex}`
-
   const { muted, toggleMute, typewriterDone, setTypewriterDone, revealUpTo } =
-    useStoryReveal({
-      subPhase: playState.subPhase,
-      currentStory,
-      storyKey,
-      topicIndex: playState.currentTopicIndex,
-      config,
-      isHost,
-    })
+    useStoryReveal()
 
   // Vote timer delay: show "Time to vote!" for 2s before countdown
-  const [voteTimerReady, setVoteTimerReady] = useState(false)
+  const local = useLocalObservable(() => ({
+    voteTimerReady: false,
+  }))
+
   const prevSubPhase = useRef(playState.subPhase)
 
   // Delay vote timer display by 2s after entering VOTING from READING
-  useEffect(() => {
-    const wasReading = prevSubPhase.current === 'READING'
-    prevSubPhase.current = playState.subPhase
+  useReaction(
+    () => playState.subPhase,
+    (subPhase) => {
+      const wasReading = prevSubPhase.current === 'READING'
+      prevSubPhase.current = subPhase
 
-    if (playState.subPhase === 'VOTING') {
-      if (wasReading) {
-        // Normal transition: show "Time to vote!" for 2s before countdown
-        setVoteTimerReady(false)
-        const timer = setTimeout(() => setVoteTimerReady(true), 2000)
-        return () => clearTimeout(timer)
+      if (subPhase === 'VOTING') {
+        if (wasReading) {
+          // Normal transition: show "Time to vote!" for 2s before countdown
+          local.voteTimerReady = false
+          const timer = setTimeout(() => {
+            local.voteTimerReady = true
+          }, 2000)
+          return () => clearTimeout(timer)
+        } else {
+          // Reconnection or already in VOTING: show timer immediately
+          local.voteTimerReady = true
+        }
       } else {
-        // Reconnection or already in VOTING: show timer immediately
-        setVoteTimerReady(true)
+        local.voteTimerReady = false
       }
-    } else {
-      setVoteTimerReady(false)
-    }
-  }, [playState.subPhase])
+    },
+  )
 
-  useEffect(() => {
-    if (phase === 'RESULTS') navigate('/results')
-  }, [phase, navigate])
+  useReaction(
+    () => phase,
+    (p) => {
+      if (p === 'RESULTS') navigate('/results')
+    },
+  )
 
   function dispatch(msg: Parameters<typeof hostAction>[0]) {
     if (isHost) hostAction(msg)
@@ -180,7 +183,7 @@ export const PlayPage = observer(function PlayPage() {
       {/* VOTING */}
       {playState.subPhase === 'VOTING' && (
         <>
-          {voteTimerReady ? (
+          {local.voteTimerReady ? (
             <Timer
               seconds={
                 playState.voteTimerSecondsLeft > 0
@@ -257,6 +260,11 @@ export const PlayPage = observer(function PlayPage() {
           </ScoreBoard>
 
           {isLeader && <Button onClick={handleNext}>Next</Button>}
+          {!isLeader && (
+            <Subtitle style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+              Waiting for the leader to continue...
+            </Subtitle>
+          )}
         </>
       )}
 
