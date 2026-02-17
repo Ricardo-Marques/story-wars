@@ -177,8 +177,6 @@ export const LobbyPage = observer(function LobbyPage() {
 
       <PlayerList players={players} />
 
-      <LeaveGameButton />
-
       {isLeader && (
         <Button
           onClick={handleStart}
@@ -189,6 +187,8 @@ export const LobbyPage = observer(function LobbyPage() {
       )}
 
       {!isLeader && <Info>Waiting for the leader to start...</Info>}
+
+      <LeaveGameButton />
     </PageWrap>
   );
 });

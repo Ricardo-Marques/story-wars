@@ -81,6 +81,7 @@ export const PageWrap = styled.div`
   gap: ${theme.space.md};
   width: 100%;
   flex: 1;
+  padding-bottom: ${theme.space.xxl};
 `;
 
 export const Subtitle = styled.h2`

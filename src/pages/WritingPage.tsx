@@ -119,6 +119,8 @@ export const WritingPage = observer(function WritingPage() {
           </Button>
         )}
 
+        {!isLeader && <Progress>Waiting for the leader...</Progress>}
+
         <LeaveGameButton />
       </PageWrap>
     );
