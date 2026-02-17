@@ -83,6 +83,9 @@ function handleClientMessage(playerId: string, msg: ClientMessage) {
     case 'CONTINUE_WITHOUT':
       handleContinueWithout(playerId, msg.targetPlayerId);
       break;
+    case 'LEAVE':
+      handleLeave(playerId);
+      break;
   }
 }
 
@@ -476,6 +479,137 @@ function handleContinueWithout(playerId: string, targetPlayerId: string) {
   }
 }
 
+// --- Leave (voluntary) ---
+
+function handleLeave(playerId: string) {
+  const state = getState();
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) return;
+
+  // Mark them disconnected + excluded so the game can proceed
+  mutate((s) => {
+    const p = s.players.find((pl) => pl.id === playerId);
+    if (p) p.connected = false;
+    if (!s.excludedPlayers) s.excludedPlayers = [];
+    if (!s.excludedPlayers.includes(playerId)) {
+      s.excludedPlayers.push(playerId);
+    }
+
+    // If the leader left, promote the next connected player
+    if (p?.isLeader) {
+      p.isLeader = false;
+      const next = s.players.find((pl) => pl.connected && pl.id !== playerId);
+      if (next) next.isLeader = true;
+    }
+  });
+
+  connectionStore.broadcast({ type: 'PLAYER_LEFT', playerId });
+
+  // Close their connection
+  const conn = connectionStore.clientConnections.get(playerId);
+  if (conn) {
+    conn.close();
+    connectionStore.clientConnections.delete(playerId);
+    connectionStore.connToPlayer.delete(conn);
+  }
+
+  // Check if game can proceed now
+  const updated = getState();
+  if (updated.phase === 'WRITING') {
+    checkAutoStartGame();
+  }
+  if (updated.phase === 'PLAYING' && updated.playState.subPhase === 'VOTING') {
+    checkAllFinalized();
+  }
+
+  // If no connected players remain besides host, end the game
+  const connectedNonHost = updated.players.filter(
+    (p) => p.connected && p.id !== gameStore.myPlayerId,
+  );
+  if (
+    updated.phase !== 'LOBBY' &&
+    updated.phase !== 'RESULTS' &&
+    connectedNonHost.length === 0 &&
+    updated.players.filter((p) => p.connected).length <= 1
+  ) {
+    // Only host remains — go to results
+    mutate((s) => {
+      s.phase = 'RESULTS';
+    });
+    clearGameState();
+  }
+}
+
+// --- Stuck-state safety: auto-resolve when too few players remain ---
+
+let stuckCheckTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function clearStuckCheck() {
+  if (stuckCheckTimeout) {
+    clearTimeout(stuckCheckTimeout);
+    stuckCheckTimeout = null;
+  }
+}
+
+function scheduleStuckCheck() {
+  clearStuckCheck();
+  // Give 30 seconds for players to reconnect before auto-resolving
+  stuckCheckTimeout = setTimeout(() => {
+    stuckCheckTimeout = null;
+    resolveStuckState();
+  }, 30000);
+}
+
+function resolveStuckState() {
+  const state = getState();
+  if (state.phase === 'LOBBY' || state.phase === 'RESULTS') return;
+
+  const connected = state.players.filter((p) => p.connected);
+  const excluded = state.excludedPlayers || [];
+  const disconnectedUnresolved = state.players.filter(
+    (p) => !p.connected && !excluded.includes(p.id),
+  );
+
+  // If no unresolved disconnects, nothing to do
+  if (disconnectedUnresolved.length === 0) return;
+
+  // If fewer than 2 connected players remain (including host), end the game
+  if (connected.length < 2) {
+    mutate((s) => {
+      s.phase = 'RESULTS';
+    });
+    clearVoteTimer();
+    clearGameState();
+    return;
+  }
+
+  // Auto-exclude all disconnected players and try to proceed
+  mutate((s) => {
+    if (!s.excludedPlayers) s.excludedPlayers = [];
+    for (const p of disconnectedUnresolved) {
+      if (!s.excludedPlayers.includes(p.id)) {
+        s.excludedPlayers.push(p.id);
+      }
+    }
+    // Promote a new leader if the leader disconnected
+    const hasLeader = s.players.some((p) => p.isLeader && p.connected);
+    if (!hasLeader) {
+      const next = s.players.find((p) => p.connected);
+      if (next) next.isLeader = true;
+    }
+  });
+
+  // Now try to proceed with the game
+  const updated = getState();
+  if (updated.phase === 'WRITING') {
+    checkAutoStartGame();
+  }
+  if (updated.phase === 'PLAYING' && updated.playState.subPhase === 'VOTING') {
+    resumeVoteTimer(() => revealAndScore());
+    checkAllFinalized();
+  }
+}
+
 // --- Disconnect / Reconnect ---
 
 function handleDisconnect(playerId: string) {
@@ -483,6 +617,12 @@ function handleDisconnect(playerId: string) {
     const player = s.players.find((p) => p.id === playerId);
     if (player) {
       player.connected = false;
+      // If the leader disconnected, promote the next connected player
+      if (player.isLeader) {
+        player.isLeader = false;
+        const next = s.players.find((p) => p.connected && p.id !== playerId);
+        if (next) next.isLeader = true;
+      }
     }
   });
   connectionStore.broadcast({ type: 'PLAYER_LEFT', playerId });
@@ -493,12 +633,13 @@ function handleDisconnect(playerId: string) {
     pauseVoteTimer();
   }
 
-  // Don't auto-advance when there are unresolved disconnects
-  // The leader must use "Continue Without" to proceed
+  // Schedule a stuck-state check as a safety net
+  scheduleStuckCheck();
 }
 
 function checkAfterReconnect() {
   if (!hasUnresolvedDisconnects()) {
+    clearStuckCheck();
     const state = getState();
     if (state.phase === 'WRITING') {
       checkAutoStartGame();
@@ -567,6 +708,7 @@ export function hostEndGame() {
   connectionStore.broadcast({ type: 'GAME_ENDED', reason: 'The host ended the game.' });
   stopHeartbeat();
   clearVoteTimer();
+  clearStuckCheck();
   clearGameState();
   // Brief delay so the broadcast has time to send before destroying peer
   setTimeout(() => {

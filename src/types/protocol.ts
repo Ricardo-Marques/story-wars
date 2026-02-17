@@ -12,7 +12,8 @@ export type ClientMessage =
   | { type: 'CAST_VOTE'; targetPlayerId: string }
   | { type: 'FINALIZE_VOTE' }
   | { type: 'NEXT' }
-  | { type: 'CONTINUE_WITHOUT'; targetPlayerId: string };
+  | { type: 'CONTINUE_WITHOUT'; targetPlayerId: string }
+  | { type: 'LEAVE' };
 
 // Host → Client messages
 export type HostMessage =

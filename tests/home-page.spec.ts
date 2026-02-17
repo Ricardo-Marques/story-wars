@@ -28,7 +28,7 @@ test.describe('Home page', () => {
       await page.getByRole('button', { name: 'Next' }).click();
     }
     await expect(page.getByText('Score & Win')).toBeVisible();
-    await expect(page.getByText('Correct guess')).toBeVisible();
+    await expect(page.getByText('Correct guess: +2 pts. Nobody')).toBeVisible();
     await page.getByRole('button', { name: 'Got it!' }).click();
     await expect(page.getByText('Score & Win')).not.toBeVisible();
   });

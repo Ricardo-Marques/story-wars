@@ -7,6 +7,7 @@ import { Button, PageWrap, Subtitle } from '../components/Button';
 import { PlayerList } from '../components/PlayerList';
 import { gameStore } from '../stores/GameStore';
 import { hostAdvanceToSetup } from '../engine/HostEngine';
+import { LeaveGameButton } from '../components/LeaveGameButton';
 
 const CodeBox = styled.div`
   display: flex;
@@ -161,6 +162,8 @@ export const LobbyPage = observer(function LobbyPage() {
       )}
 
       {!isLeader && <Info>Waiting for the leader to start...</Info>}
+
+      <LeaveGameButton />
     </PageWrap>
   );
 });

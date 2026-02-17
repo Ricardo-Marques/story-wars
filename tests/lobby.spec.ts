@@ -43,4 +43,40 @@ test.describe('Lobby', () => {
 
     await expect(client.page.getByText('Waiting for the leader to start...')).toBeVisible({ timeout: 10_000 });
   });
+
+  test('client can leave room from lobby', async ({ browser }) => {
+    host = await createPlayer(browser, 'HostPlayer');
+    const code = await host.createRoom();
+
+    client = await createPlayer(browser, 'ClientPlayer');
+    await client.joinRoom(code);
+
+    // Client should see leave button
+    const leaveBtn = client.page.getByRole('button', { name: 'Leave Room' });
+    await expect(leaveBtn).toBeVisible({ timeout: 5_000 });
+    await leaveBtn.click();
+
+    // Client should be back at home page
+    await client.waitForPhase('/', 5_000);
+    await expect(client.page.getByPlaceholder('Your name')).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('host ending game returns all players home', async ({ browser }) => {
+    host = await createPlayer(browser, 'HostPlayer');
+    const code = await host.createRoom();
+
+    client = await createPlayer(browser, 'ClientPlayer');
+    await client.joinRoom(code);
+
+    // Host clicks Leave Room
+    const leaveBtn = host.page.getByRole('button', { name: 'Leave Room' });
+    await expect(leaveBtn).toBeVisible({ timeout: 5_000 });
+    await leaveBtn.click();
+
+    // Host goes home
+    await host.waitForPhase('/', 5_000);
+
+    // Client should also be sent home (GAME_ENDED broadcast)
+    await client.waitForPhase('/', 10_000);
+  });
 });

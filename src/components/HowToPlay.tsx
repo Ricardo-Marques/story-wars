@@ -20,10 +20,6 @@ const popIn = keyframes`
   80% { transform: scale(1.08) }
   100% { opacity: 1; transform: scale(1) }
 `
-const growUp = keyframes`
-  from { transform: scaleY(0) }
-  to { transform: scaleY(1) }
-`
 const blink = keyframes`
   0%, 100% { opacity: 1 }
   50% { opacity: 0 }
@@ -100,199 +96,279 @@ function ani(kf: Parameters<typeof css>[0], dur: number, del: number) {
   return css`opacity: 0; animation: ${kf} ${dur}s ease-out ${del}s forwards;`
 }
 
+// SVG rounded rect helper — matches theme.radii.md (14px → ~8 at SVG scale)
+const R = 8
+const RS = 6 // smaller radius for inner elements
+
 // ── Scene 1: Join ───────────────────────────────────────────────
+// Shows: name input, avatar circle, "Create Room" button, room code badge
 
 function JoinScene() {
   return (
-    <svg viewBox="0 0 240 140" css={svgCss}>
-      {/* Avatar 1 */}
-      <circle cx="40" cy="38" r="18" fill={c.primaryLight + '33'} stroke={c.primaryLight}
-        strokeWidth="1.5" css={ani(slideUp, 0.5, 0)} />
-      {/* Avatar 2 */}
-      <circle cx="200" cy="38" r="18" fill={c.secondary + '33'} stroke={c.secondary}
-        strokeWidth="1.5" css={ani(slideUp, 0.5, 0.15)} />
-      {/* Avatar 3 */}
-      <circle cx="120" cy="118" r="18" fill={c.warning + '33'} stroke={c.warning}
-        strokeWidth="1.5" css={ani(slideUp, 0.5, 0.3)} />
+    <svg viewBox="0 0 240 150" css={svgCss}>
+      {/* Name input field */}
+      <rect x="30" y="10" width="180" height="24" rx={RS} fill={c.bgLight}
+        stroke={c.textMuted + '22'} strokeWidth="1" css={ani(slideUp, 0.4, 0)} />
+      <text x="42" y="26" fontSize="8" fill={c.textMuted + '88'} fontFamily="inherit"
+        css={ani(fadeIn, 0.3, 0.1)}>Your name</text>
+      <text x="42" y="26" fontSize="8" fill={c.text} fontFamily="inherit"
+        css={ani(fadeIn, 0.3, 0.3)}>Alice</text>
 
-      {/* Connecting lines */}
-      <line x1="56" y1="44" x2="78" y2="58" stroke={c.textMuted + '33'} strokeWidth="1" css={ani(fadeIn, 0.3, 0.6)} />
-      <line x1="184" y1="44" x2="162" y2="58" stroke={c.textMuted + '33'} strokeWidth="1" css={ani(fadeIn, 0.3, 0.65)} />
-      <line x1="120" y1="100" x2="120" y2="86" stroke={c.textMuted + '33'} strokeWidth="1" css={ani(fadeIn, 0.3, 0.7)} />
+      {/* Avatar circle (lorelei-style placeholder) */}
+      <circle cx="120" cy="54" r="16" fill={c.bgLight}
+        stroke={c.primaryLight + '44'} strokeWidth="1.5" css={ani(popIn, 0.4, 0.2)} />
+      <text x="120" y="58" textAnchor="middle" fontSize="14" css={ani(fadeIn, 0.3, 0.4)}>😊</text>
+
+      {/* "Create Room" button */}
+      <rect x="55" y="78" width="130" height="24" rx={RS} fill={c.primary}
+        css={ani(slideUp, 0.4, 0.4)} />
+      <text x="120" y="94" textAnchor="middle" fontSize="8" fontWeight="600"
+        fill={c.text} fontFamily="inherit" css={ani(fadeIn, 0.3, 0.5)}>Create Room</text>
+
+      {/* Arrow down to room code */}
+      <line x1="120" y1="106" x2="120" y2="114" stroke={c.textMuted + '44'}
+        strokeWidth="1" css={ani(fadeIn, 0.3, 0.7)} />
 
       {/* Room code badge */}
-      <rect x="78" y="52" width="84" height="36" rx="10" fill={c.bgCard}
-        stroke={c.primaryLight + '66'} strokeWidth="1" css={ani(fadeIn, 0.4, 0.5)} />
-      <text x="120" y="66" textAnchor="middle" fontSize="7" fill={c.textMuted}
-        fontFamily="inherit" css={ani(fadeIn, 0.3, 0.75)}>ROOM CODE</text>
-      <text x="120" y="81" textAnchor="middle" fontSize="14" fontWeight="800"
+      <rect x="65" y="116" width="110" height="28" rx={R} fill={c.bgCard}
+        stroke={c.primaryLight + '44'} strokeWidth="1" css={ani(fadeIn, 0.4, 0.6)} />
+      <text x="120" y="128" textAnchor="middle" fontSize="6" fill={c.textMuted}
+        fontFamily="inherit" css={ani(fadeIn, 0.3, 0.8)}>ROOM CODE</text>
+      <text x="120" y="139" textAnchor="middle" fontSize="13" fontWeight="800"
         letterSpacing="3" fill={c.primaryLight} fontFamily="inherit"
-        css={ani(fadeIn, 0.3, 0.85)}>XK4W</text>
+        css={ani(fadeIn, 0.3, 0.9)}>XK4W</text>
     </svg>
   )
 }
 
 // ── Scene 2: Topics ─────────────────────────────────────────────
+// Shows: 2×2 grid of topic buttons with emoji + label, matching TopicSelector
 
 function TopicsScene() {
   const topics = [
-    { x: 18, y: 18, emoji: '\uD83D\uDE31', label: 'Embarrassing' },
-    { x: 128, y: 18, emoji: '\uD83E\uDD25', label: 'Biggest lie' },
-    { x: 18, y: 74, emoji: '\uD83C\uDF19', label: 'Weird dream' },
-    { x: 128, y: 74, emoji: '\uD83D\uDE02', label: 'Funniest' },
+    { x: 16, y: 14, emoji: '😱', label: 'Embarrassing' },
+    { x: 126, y: 14, emoji: '🤥', label: 'Biggest lie' },
+    { x: 16, y: 64, emoji: '🌙', label: 'Weird dream' },
+    { x: 126, y: 64, emoji: '😂', label: 'Funniest' },
   ]
-  const sel = [0, 3]
+  const selected = [0, 3]
 
   return (
     <svg viewBox="0 0 240 140" css={svgCss}>
+      {/* Subtitle */}
+      <text x="120" y="10" textAnchor="middle" fontSize="7" fill={c.textMuted}
+        fontFamily="inherit" css={ani(fadeIn, 0.3, 0)}>Pick topics for this round</text>
+
       {topics.map((t, i) => {
-        const isSel = sel.includes(i)
+        const isSel = selected.includes(i)
         const d = 0.1 + i * 0.12
         return (
           <g key={i} css={ani(slideUp, 0.4, d)}>
-            <rect x={t.x} y={t.y} width="94" height="44" rx="10"
-              fill={c.bgCard} stroke={c.textMuted + '22'} strokeWidth="1" />
-            {isSel && (
-              <rect x={t.x} y={t.y} width="94" height="44" rx="10"
-                fill={c.primaryLight + '22'} stroke={c.primaryLight} strokeWidth="1.5"
-                css={ani(fadeIn, 0.3, d + 0.5)} />
-            )}
-            <text x={t.x + 14} y={t.y + 28} fontSize="16">{t.emoji}</text>
-            <text x={t.x + 34} y={t.y + 26} fontSize="8" fill={c.textMuted}
-              fontFamily="inherit">{t.label}</text>
+            {/* Button background — matches TopicBtn */}
+            <rect x={t.x} y={t.y} width="98" height="38" rx={R}
+              fill={isSel ? c.primary : c.bgCard}
+              stroke={isSel ? c.primaryLight + '44' : c.textMuted + '11'} strokeWidth="1" />
+            {/* Emoji */}
+            <text x={t.x + 14} y={t.y + 25} fontSize="14">{t.emoji}</text>
+            {/* Label */}
+            <text x={t.x + 32} y={t.y + 24} fontSize="7.5"
+              fill={c.text} fontFamily="inherit">{t.label}</text>
+            {/* Checkmark for selected */}
             {isSel && (
               <g css={css`
                 opacity: 0;
                 transform-box: fill-box;
                 transform-origin: center;
-                animation: ${popIn} 0.3s ease-out ${d + 0.7}s forwards;
+                animation: ${popIn} 0.3s ease-out ${d + 0.5}s forwards;
               `}>
-                <text x={t.x + 80} y={t.y + 16} fontSize="12" fill={c.success}>✓</text>
+                <text x={t.x + 85} y={t.y + 14} fontSize="10" fill={c.success}>✓</text>
               </g>
             )}
           </g>
         )
       })}
+
+      {/* "Start Writing!" button */}
+      <rect x="55" y="112" width="130" height="22" rx={RS} fill={c.primary}
+        css={ani(slideUp, 0.4, 0.8)} />
+      <text x="120" y="127" textAnchor="middle" fontSize="7.5" fontWeight="600"
+        fill={c.text} fontFamily="inherit" css={ani(fadeIn, 0.3, 0.9)}>Start Writing!</text>
     </svg>
   )
 }
 
 // ── Scene 3: Write ──────────────────────────────────────────────
+// Shows: topic header (emoji + text), text area with story lines, cursor, submit button
 
 function WriteScene() {
   const lines = [
-    { y: 40, w: 140 },
-    { y: 56, w: 160 },
-    { y: 72, w: 120 },
+    { y: 52, w: 140 },
+    { y: 64, w: 155 },
+    { y: 76, w: 120 },
     { y: 88, w: 85 },
   ]
   return (
-    <svg viewBox="0 0 240 140" css={svgCss}>
-      {/* Paper */}
-      <rect x="30" y="14" width="180" height="112" rx="12" fill={c.bgCard}
-        stroke={c.textMuted + '22'} strokeWidth="1" />
-      {/* Topic */}
-      <text x="50" y="32" fontSize="7.5" fill={c.textMuted} fontFamily="inherit"
-        css={ani(fadeIn, 0.3, 0.2)}>😱 Most embarrassing moment</text>
-      {/* Text lines */}
+    <svg viewBox="0 0 240 150" css={svgCss}>
+      {/* Topic header */}
+      <text x="120" y="12" textAnchor="middle" fontSize="14"
+        css={ani(fadeIn, 0.3, 0)}>😱</text>
+      <text x="120" y="24" textAnchor="middle" fontSize="8" fontWeight="600"
+        fill={c.text} fontFamily="inherit"
+        css={ani(fadeIn, 0.3, 0.1)}>Most embarrassing moment</text>
+
+      {/* Text area — matches TextArea component */}
+      <rect x="25" y="34" width="190" height="72" rx={R} fill={c.bgLight}
+        stroke={c.textMuted + '22'} strokeWidth="1" css={ani(fadeIn, 0.3, 0.2)} />
+
+      {/* Story text lines (appearing one by one) */}
       {lines.map((l, i) => (
-        <rect key={i} x="50" y={l.y} width={l.w} height="6" rx="3"
-          fill={c.textMuted + '44'} css={ani(fadeIn, 0.3, 0.4 + i * 0.3)} />
+        <rect key={i} x="38" y={l.y} width={l.w} height="5" rx="2.5"
+          fill={c.text + '66'} css={ani(fadeIn, 0.3, 0.4 + i * 0.25)} />
       ))}
-      {/* Cursor */}
-      <rect x={50 + lines[3].w + 4} y={lines[3].y - 1} width="2" height="10" rx="1"
+
+      {/* Blinking cursor */}
+      <rect x={38 + lines[3].w + 3} y={lines[3].y - 2} width="2" height="9" rx="1"
         fill={c.primaryLight} css={css`
           opacity: 0;
-          animation: ${fadeIn} 0.2s ease-out ${0.4 + lines.length * 0.3}s forwards,
-                     ${blink} 0.8s step-end ${0.6 + lines.length * 0.3}s infinite;
+          animation: ${fadeIn} 0.2s ease-out ${0.4 + lines.length * 0.25}s forwards,
+                     ${blink} 0.8s step-end ${0.6 + lines.length * 0.25}s infinite;
         `} />
+
+      {/* Submit button */}
+      <rect x="55" y="118" width="130" height="22" rx={RS} fill={c.primary}
+        css={ani(slideUp, 0.4, 1.4)} />
+      <text x="120" y="133" textAnchor="middle" fontSize="7.5" fontWeight="600"
+        fill={c.text} fontFamily="inherit" css={ani(fadeIn, 0.3, 1.5)}>Submit & Done</text>
     </svg>
   )
 }
 
 // ── Scene 4: Vote ───────────────────────────────────────────────
+// Shows: story card, "Who wrote this?" label, vote buttons with avatar+name, "Lock In" button
 
 function VoteScene() {
-  const avatars = [
-    { cx: 70, fill: c.primaryLight },
-    { cx: 120, fill: c.secondary },
-    { cx: 170, fill: c.warning },
+  const players = [
+    { name: 'Alice', color: c.primaryLight },
+    { name: 'Bob', color: c.secondary },
+    { name: 'Charlie', color: c.warning },
   ]
-  return (
-    <svg viewBox="0 0 240 140" css={svgCss}>
-      {/* Story card */}
-      <rect x="40" y="8" width="160" height="48" rx="10" fill={c.bgCard}
-        stroke={c.textMuted + '22'} strokeWidth="1" />
-      <rect x="56" y="22" width="100" height="5" rx="2.5" fill={c.textMuted + '44'} />
-      <rect x="56" y="33" width="80" height="5" rx="2.5" fill={c.textMuted + '44'} />
-      <rect x="56" y="44" width="60" height="5" rx="2.5" fill={c.textMuted + '33'} />
 
-      {/* Label */}
-      <text x="120" y="76" textAnchor="middle" fontSize="8" fill={c.textMuted}
+  return (
+    <svg viewBox="0 0 240 155" css={svgCss}>
+      {/* Story card — matches StoryCard */}
+      <rect x="25" y="4" width="190" height="38" rx={R} fill={c.bgCard}
+        stroke={c.textMuted + '11'} strokeWidth="1" />
+      <text x="37" y="16" fontSize="6" fill={c.textMuted} fontFamily="inherit">
+        😱 Most embarrassing moment
+      </text>
+      <rect x="37" y="22" width="120" height="4" rx="2" fill={c.text + '44'} />
+      <rect x="37" y="30" width="90" height="4" rx="2" fill={c.text + '33'} />
+
+      {/* "Who wrote this?" label */}
+      <text x="120" y="56" textAnchor="middle" fontSize="8" fill={c.textMuted}
         fontFamily="inherit" css={ani(fadeIn, 0.3, 0.3)}>Who wrote this?</text>
 
-      {/* Avatar choices */}
-      {avatars.map((a, i) => (
-        <circle key={i} cx={a.cx} cy="100" r="16" fill={a.fill + '33'}
-          stroke={a.fill} strokeWidth="1.5" css={ani(slideUp, 0.4, 0.4 + i * 0.1)} />
-      ))}
+      {/* Vote buttons — rows matching VotePanel */}
+      {players.map((p, i) => {
+        const y = 66 + i * 28
+        const isSelected = i === 1 // Bob is selected
+        const d = 0.4 + i * 0.12
+        return (
+          <g key={i} css={ani(slideUp, 0.4, d)}>
+            {/* Vote button row */}
+            <rect x="25" y={y} width="155" height="22" rx={RS}
+              fill={isSelected ? c.primary : c.bgCard}
+              stroke={isSelected ? c.primaryLight + '44' : c.textMuted + '11'}
+              strokeWidth="1" />
+            {/* Avatar circle */}
+            <circle cx={40} cy={y + 11} r="7" fill={p.color + '33'}
+              stroke={p.color} strokeWidth="1" />
+            {/* Player name */}
+            <text x="52" y={y + 14} fontSize="7.5" fill={c.text}
+              fontFamily="inherit">{p.name}</text>
 
-      {/* Selection ring */}
-      <circle cx="120" cy="100" r="20" fill="none" stroke={c.success} strokeWidth="2"
-        css={css`
-          opacity: 0;
-          transform-origin: 120px 100px;
-          animation: ${popIn} 0.4s ease-out 1s forwards;
-        `} />
+            {/* "Lock In" button for selected */}
+            {isSelected && (
+              <g css={css`
+                opacity: 0;
+                transform-box: fill-box;
+                transform-origin: center;
+                animation: ${popIn} 0.3s ease-out ${d + 0.4}s forwards;
+              `}>
+                <rect x="185" y={y + 1} width="40" height="20" rx="5" fill={c.success} />
+                <text x="205" y={y + 14} textAnchor="middle" fontSize="6" fontWeight="600"
+                  fill={c.bg} fontFamily="inherit">Lock In</text>
+              </g>
+            )}
+          </g>
+        )
+      })}
 
-      {/* Result */}
-      <text x="120" y="132" textAnchor="middle" fontSize="9" fontWeight="600"
-        fill={c.success} fontFamily="inherit" css={ani(bounceIn, 0.4, 1.3)}>
-        ✓ Correct! +2 pts
+      {/* Result - "Vote locked in!" */}
+      <text x="120" y="148" textAnchor="middle" fontSize="7" fontWeight="600"
+        fill={c.success} fontFamily="inherit" css={ani(bounceIn, 0.4, 1.2)}>
+        ✓ Vote locked in!
       </text>
     </svg>
   )
 }
 
 // ── Scene 5: Score ──────────────────────────────────────────────
+// Shows: scoreboard rows with rank, avatar, name, score — matches Scoreboard component
 
 function ScoreScene() {
-  const baseY = 116
-  const bars = [
-    { x: 55, h: 50, score: '8', color: c.textMuted, rank: '2nd' },
-    { x: 105, h: 75, score: '12', color: c.warning, rank: '1st' },
-    { x: 155, h: 32, score: '5', color: c.textMuted + 'aa', rank: '3rd' },
+  const players = [
+    { rank: 1, name: 'Bob', score: 12, color: c.warning },
+    { rank: 2, name: 'Alice', score: 8, color: c.textMuted },
+    { rank: 3, name: 'Charlie', score: 5, color: '#cd7f32' },
   ]
 
   return (
     <svg viewBox="0 0 240 140" css={svgCss}>
-      {/* Title */}
-      <text x="120" y="16" textAnchor="middle" fontSize="10" fontWeight="600"
+      {/* "Game Over!" title */}
+      <text x="120" y="14" textAnchor="middle" fontSize="10" fontWeight="700"
         fill={c.text} fontFamily="inherit" css={ani(fadeIn, 0.3, 0)}>Game Over!</text>
 
-      {/* Bars */}
-      {bars.map((b, i) => (
-        <g key={i}>
-          <rect x={b.x} y={baseY - b.h} width="30" height={b.h} rx="6"
-            fill={b.color + '33'} stroke={b.color} strokeWidth="1"
-            css={css`
-              transform-origin: ${b.x + 15}px ${baseY}px;
-              animation: ${growUp} 0.5s ease-out ${0.2 + i * 0.15}s both;
-            `} />
-          {/* Score */}
-          <text x={b.x + 15} y={baseY - b.h - 6} textAnchor="middle" fontSize="11"
-            fontWeight="700" fill={b.color} fontFamily="inherit"
-            css={ani(fadeIn, 0.3, 0.7 + i * 0.1)}>{b.score}</text>
-          {/* Rank */}
-          <text x={b.x + 15} y={baseY + 12} textAnchor="middle" fontSize="7"
-            fill={c.textMuted} fontFamily="inherit"
-            css={ani(fadeIn, 0.3, 0.8 + i * 0.1)}>{b.rank}</text>
-        </g>
-      ))}
-
       {/* Crown */}
-      <text x="120" y={baseY - bars[1].h - 18} textAnchor="middle" fontSize="16"
-        css={ani(bounceIn, 0.5, 1.1)}>👑</text>
+      <text x="120" y="30" textAnchor="middle" fontSize="14"
+        css={ani(bounceIn, 0.5, 0.8)}>👑</text>
+
+      {/* Scoreboard rows — matching Scoreboard component */}
+      {players.map((p, i) => {
+        const y = 40 + i * 32
+        const d = 0.2 + i * 0.15
+        return (
+          <g key={i} css={ani(slideUp, 0.4, d)}>
+            {/* Row background */}
+            <rect x="20" y={y} width="200" height="26" rx={RS} fill={c.bgCard}
+              stroke={c.textMuted + '11'} strokeWidth="1" />
+            {/* Left border accent (rank color) */}
+            <rect x="20" y={y + 3} width="3" height="20" rx="1.5" fill={p.color} />
+            {/* Rank number */}
+            <text x="36" y={y + 17} textAnchor="middle" fontSize="10" fontWeight="800"
+              fill={c.text} fontFamily="inherit">{p.rank}</text>
+            {/* Avatar circle */}
+            <circle cx="52" cy={y + 13} r="8" fill={c.bgLight}
+              stroke={c.textMuted + '22'} strokeWidth="0.5" />
+            <text x="52" y={y + 16} textAnchor="middle" fontSize="8">
+              {i === 0 ? '😎' : i === 1 ? '😊' : '🙃'}
+            </text>
+            {/* Player name */}
+            <text x="66" y={y + 17} fontSize="8" fontWeight="600"
+              fill={c.text} fontFamily="inherit">{p.name}</text>
+            {/* Score */}
+            <text x="200" y={y + 17} textAnchor="end" fontSize="9" fontWeight="800"
+              fill={c.warning} fontFamily="inherit"
+              css={ani(fadeIn, 0.3, d + 0.4)}>{p.score} pts</text>
+          </g>
+        )
+      })}
+
+      {/* Scoring info */}
+      <text x="120" y="138" textAnchor="middle" fontSize="6.5" fill={c.textMuted}
+        fontFamily="inherit" css={ani(fadeIn, 0.3, 1)}>
+        Correct guess: +2 pts · Nobody guesses you: +3 pts
+      </text>
     </svg>
   )
 }

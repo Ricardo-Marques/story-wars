@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react'
 import { css, keyframes } from '@emotion/react'
 import { theme } from '../styles/theme'
-import { Logo } from './Logo'
 
 const fadeInUp = keyframes`
   0% { opacity: 0; transform: translateY(8px) scale(0.97); }
@@ -53,21 +52,35 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 8px;
         animation: ${phase === 'fade' ? fadeOut : 'none'} ${FADE_MS}ms ease-out forwards;
       `}
     >
-      <div
+      <svg
+        viewBox="0 0 340 50"
         css={css`
+          width: 280px;
+          height: auto;
           animation: ${fadeInUp} 0.7s ease-out both;
         `}
       >
-        <Logo variant="splash" />
-      </div>
+        <text
+          x="170"
+          y="40"
+          textAnchor="middle"
+          fontFamily="'Segoe UI', system-ui, sans-serif"
+          fontWeight="800"
+          fontSize="44"
+          letterSpacing="1"
+          fill="#FFFFFF"
+        >
+          Story Wars
+        </text>
+      </svg>
       <span
         css={css`
           font-size: 0.85rem;
-          color: ${theme.colors.primaryLight};
+          color: rgba(255, 255, 255, 0.7);
           letter-spacing: 1.5px;
           font-weight: 300;
           opacity: 0;

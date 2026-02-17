@@ -8,6 +8,7 @@ import { TOPICS } from '../data/topics';
 import { gameStore } from '../stores/GameStore';
 import { hostAction } from '../engine/HostEngine';
 import { sendAction } from '../engine/ClientEngine';
+import { LeaveGameButton } from '../components/LeaveGameButton';
 
 const TopicHeader = styled.div`
   text-align: center;
@@ -124,6 +125,8 @@ export const WritingPage = observer(function WritingPage() {
             {allWritingDone ? 'Start the Game!' : 'Waiting for others...'}
           </Button>
         )}
+
+        <LeaveGameButton />
       </PageWrap>
     );
   }
@@ -153,6 +156,8 @@ export const WritingPage = observer(function WritingPage() {
       <Button onClick={handleSubmit} disabled={!drafts[currentTopicId]?.trim()}>
         {currentIdx < topicIds.length - 1 ? 'Submit & Next' : 'Submit & Done'}
       </Button>
+
+      <LeaveGameButton />
     </PageWrap>
   );
 });

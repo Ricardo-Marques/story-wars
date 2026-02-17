@@ -8,6 +8,7 @@ import { TopicSelector } from '../components/TopicSelector';
 import { gameStore } from '../stores/GameStore';
 import { hostAction } from '../engine/HostEngine';
 import { sendAction } from '../engine/ClientEngine';
+import { LeaveGameButton } from '../components/LeaveGameButton';
 
 const Controls = styled.div`
   display: flex;
@@ -114,6 +115,8 @@ export const SetupPage = observer(function SetupPage() {
         </Controls>
 
         <Info>{config.topicIds.length} topic{config.topicIds.length !== 1 ? 's' : ''} selected</Info>
+
+        <LeaveGameButton />
       </PageWrap>
     );
   }
@@ -162,6 +165,8 @@ export const SetupPage = observer(function SetupPage() {
       <Button onClick={handleStartWriting} disabled={selectedTopics.length === 0}>
         {selectedTopics.length === 0 ? 'Select at least 1 topic' : 'Start Writing!'}
       </Button>
+
+      <LeaveGameButton />
     </PageWrap>
   );
 });

@@ -12,6 +12,7 @@ import { TOPICS } from '../data/topics'
 import { getAvatarDataUri } from '../utils/avatar'
 import { connectionStore } from '../stores/ConnectionStore'
 import { useStoryReveal } from '../hooks/useStoryReveal'
+import { LeaveGameButton } from '../components/LeaveGameButton'
 import {
   RevealBox,
   RevealAvatar,
@@ -258,6 +259,8 @@ export const PlayPage = observer(function PlayPage() {
           {isLeader && <Button onClick={handleNext}>Next</Button>}
         </>
       )}
+
+      <LeaveGameButton />
     </PageWrap>
   )
 })

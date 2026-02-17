@@ -205,8 +205,6 @@ export const HomePage = observer(function HomePage() {
   // Default view: create or join
   return (
     <PageWrap>
-      <Subtitle>Write stories. Guess authors. Win glory.</Subtitle>
-
       {gameEndedReason && <NoticeMsg>{gameEndedReason}</NoticeMsg>}
 
       {canResume && (
