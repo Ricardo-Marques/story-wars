@@ -1,49 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 80">
-  <style>
-    @keyframes reveal {
-      0% { transform: scaleX(0); }
-      100% { transform: scaleX(1); }
-    }
-    @keyframes glow {
-      0%, 100% { filter: drop-shadow(0 0 6px rgba(123,47,219,0.5)) drop-shadow(0 0 20px rgba(123,47,219,0.25)); }
-      50% { filter: drop-shadow(0 0 14px rgba(123,47,219,0.8)) drop-shadow(0 0 40px rgba(123,47,219,0.4)); }
-    }
-    @keyframes fade-in {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-    @keyframes tagline-in {
-      0%, 85% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-    .logo-group {
-      animation: glow 3s ease-in-out 1.8s infinite;
-    }
-    .logo-text {
-      animation: fade-in 0.8s ease-out forwards;
-    }
-    .reveal-rect {
-      transform-origin: left;
-      animation: reveal 1.6s ease-out forwards;
-    }
-    .tagline {
-      opacity: 0;
-      animation: tagline-in 2.8s ease-out forwards;
-    }
-  </style>
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#7B2FDB"/>
-      <stop offset="50%" stop-color="#00E5FF"/>
+      <stop offset="50%" stop-color="#A87FE8"/>
       <stop offset="100%" stop-color="#7B2FDB"/>
     </linearGradient>
-    <clipPath id="reveal">
-      <rect class="reveal-rect" x="0" y="0" width="480" height="80"/>
-    </clipPath>
+    <filter id="glow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   <rect width="480" height="80" rx="16" fill="#0F1221"/>
-  <g class="logo-group">
-    <text class="logo-text" x="240" y="50" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-weight="900" font-size="52" letter-spacing="-1" fill="url(#g)" clip-path="url(#reveal)">Story Wars</text>
-  </g>
-  <text class="tagline" x="240" y="72" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-weight="400" font-size="11" fill="#AAB0D6">Write stories. Guess authors. Win glory.</text>
+  <text x="240" y="50" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-weight="800" font-size="48" letter-spacing="1" fill="url(#g)" filter="url(#glow)">Story Wars</text>
+  <text x="240" y="72" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-weight="300" font-size="11" letter-spacing="1" fill="#AAB0D6">Write stories. Guess authors. Win glory.</text>
 </svg>

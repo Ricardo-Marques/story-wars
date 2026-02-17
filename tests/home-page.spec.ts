@@ -22,11 +22,15 @@ test.describe('Home page', () => {
 
   test('rules modal opens and closes', async ({ page }) => {
     await page.getByText('How to Play').click();
-    await expect(page.getByText('1. Create or Join')).toBeVisible();
-    await expect(page.getByText('+2 points')).toBeVisible();
-    await expect(page.getByText('+3 points')).toBeVisible();
+    await expect(page.getByText('Create & Join')).toBeVisible();
+    // Navigate to last step (Score & Win) to check scoring info and "Got it!" button
+    for (let i = 0; i < 4; i++) {
+      await page.getByRole('button', { name: 'Next' }).click();
+    }
+    await expect(page.getByText('Score & Win')).toBeVisible();
+    await expect(page.getByText('Correct guess')).toBeVisible();
     await page.getByRole('button', { name: 'Got it!' }).click();
-    await expect(page.getByText('1. Create or Join')).not.toBeVisible();
+    await expect(page.getByText('Score & Win')).not.toBeVisible();
   });
 
   test('create room requires a name', async ({ page }) => {

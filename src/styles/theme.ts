@@ -10,7 +10,7 @@ export const theme = {
     text: '#FFFFFF',
     textMuted: '#AAB0D6',
     success: '#2BFF88',
-    warning: '#FFD93D',
+    warning: '#6BC4B0',
     error: '#FF4D6D',
   },
   fonts: {

@@ -83,14 +83,16 @@ export const ResumeCode = styled.span`
 `
 
 export const RulesLink = styled.button`
-  background: none;
-  border: none;
-  color: ${theme.colors.primaryLight};
+  background: ${theme.colors.bgCard};
+  border: 1px solid ${theme.colors.textMuted}22;
+  border-radius: ${theme.radii.md};
+  color: ${theme.colors.textMuted};
   font-size: 0.85rem;
   cursor: pointer;
-  text-decoration: underline;
-  padding: ${theme.space.xs};
+  padding: ${theme.space.sm} ${theme.space.md};
+  transition: all 0.2s ease;
   &:hover {
     color: ${theme.colors.text};
+    border-color: ${theme.colors.textMuted}44;
   }
 `

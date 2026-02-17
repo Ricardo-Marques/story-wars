@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { observer } from 'mobx-react-lite'
 import { Button, Input, PageWrap, Subtitle } from '../components/Button'
 import { AvatarPicker } from '../components/AvatarPicker'
-import { RulesModal } from '../components/RulesModal'
+import { HowToPlay } from '../components/HowToPlay'
 import { connectionStore } from '../stores/ConnectionStore'
 import { gameStore } from '../stores/GameStore'
 import { initHost, resumeHost, hostJoin } from '../engine/HostEngine'
@@ -259,7 +259,7 @@ export const HomePage = observer(function HomePage() {
 
       <RulesLink onClick={() => setShowRules(true)}>How to Play</RulesLink>
 
-      <RulesModal open={showRules} onClose={() => setShowRules(false)} />
+      <HowToPlay open={showRules} onClose={() => setShowRules(false)} />
     </PageWrap>
   )
 })

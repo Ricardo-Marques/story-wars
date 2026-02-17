@@ -1,7 +1,9 @@
+import { useState, useCallback } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { Layout } from './components/Layout';
 import { PhaseRouter } from './components/PhaseRouter';
+import { SplashScreen } from './components/SplashScreen';
 import { HomePage } from './pages/HomePage';
 import { LobbyPage } from './pages/LobbyPage';
 import { SetupPage } from './pages/SetupPage';
@@ -11,9 +13,13 @@ import { ResultsPage } from './pages/ResultsPage';
 import { DisconnectOverlay } from './components/DisconnectOverlay';
 
 export function App() {
+  const [splashDone, setSplashDone] = useState(false);
+  const handleSplashDone = useCallback(() => setSplashDone(true), []);
+
   return (
     <HashRouter>
       <GlobalStyles />
+      {!splashDone && <SplashScreen onDone={handleSplashDone} />}
       <PhaseRouter />
       <DisconnectOverlay />
       <Layout>

@@ -5,12 +5,14 @@ import { getAvatarDataUri, randomSeed } from '../utils/avatar';
 const Wrap = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: ${theme.space.md};
+  padding: ${theme.space.sm} 0;
 `;
 
 const AvatarImg = styled.img`
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   border-radius: ${theme.radii.full};
   background: ${theme.colors.bgLight};
   border: 2px solid ${theme.colors.primaryLight}44;

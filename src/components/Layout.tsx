@@ -3,6 +3,8 @@ import { theme } from '../styles/theme';
 import { Logo } from './Logo';
 import type { ReactNode } from 'react';
 
+
+
 const Shell = styled.div`
   display: flex;
   flex-direction: column;
@@ -22,7 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <Shell>
       <LogoWrap>
-        <Logo variant="draw" />
+        <Logo variant="default" />
       </LogoWrap>
       {children}
     </Shell>

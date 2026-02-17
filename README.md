@@ -72,7 +72,7 @@ State flows one way: **Player action -> Host engine -> Full state broadcast -> A
 
 ### Other Libraries
 
-- **[@dicebear](https://www.dicebear.com/)** — Procedurally generated player avatars (adventurer style)
+- **[@dicebear](https://www.dicebear.com/)** — Procedurally generated player avatars (lorelei style)
 - **Web Speech API** — Browser-native text-to-speech for reading stories aloud with synchronized typewriter reveal
 
 ### Testing
