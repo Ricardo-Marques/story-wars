@@ -80,6 +80,7 @@ Ask questions if you need to on how to achieve any of these requests.
 # Round 11
 
 Fix the following bugs:
-1- The timer should start from the right place when a user joins mid story. Currently it starts counting down from the max timer.
+1- The timer should start from the right place when a user re-joins mid story after being disconnected. Currently it starts counting down from the max timer.
+2- The app still behaves weirdly when someone disconnects while collecting stories. The game continue saying that it's waiting for that user which disconnected, and when they reconnect they should continue proving stories for topics they haven't provided stories for yet.
 
 Ask questions if you need to on how to achieve any of these requests.

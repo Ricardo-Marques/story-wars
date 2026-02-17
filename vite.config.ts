@@ -1,8 +1,9 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/story-wars/',
   build: {
     rollupOptions: {
       output: {
@@ -27,15 +28,24 @@ export default defineConfig({
       manifest: {
         name: 'Story Wars',
         short_name: 'StoryWars',
-        description: 'A multiplayer party game where players write stories and guess authors',
+        description:
+          'A multiplayer party game where players write stories and guess authors',
         theme_color: '#6c5ce7',
         background_color: '#1a1a2e',
         display: 'standalone',
         icons: [
-          { src: '/icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
-          { src: '/icons/icon-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+          {
+            src: 'icons/icon-192.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml',
+          },
+          {
+            src: 'icons/icon-512.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+          },
         ],
       },
     }),
   ],
-});
+})

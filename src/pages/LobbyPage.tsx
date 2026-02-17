@@ -68,7 +68,7 @@ const CopiedBanner = styled.div`
 `;
 
 function getJoinUrl(roomCode: string, hostName?: string) {
-  const base = `${window.location.origin}/join/${roomCode}`;
+  const base = `${window.location.origin}${window.location.pathname}#/join/${roomCode}`;
   if (hostName) return `${base}?host=${encodeURIComponent(hostName)}`;
   return base;
 }

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { Layout } from './components/Layout';
 import { PhaseRouter } from './components/PhaseRouter';
@@ -12,7 +12,7 @@ import { DisconnectOverlay } from './components/DisconnectOverlay';
 
 export function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <GlobalStyles />
       <PhaseRouter />
       <DisconnectOverlay />
@@ -27,6 +27,6 @@ export function App() {
           <Route path="/results" element={<ResultsPage />} />
         </Routes>
       </Layout>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
