@@ -1,24 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 80">
   <style>
-    @keyframes draw {
-      0% { stroke-dashoffset: 800; fill-opacity: 0; }
-      60% { stroke-dashoffset: 0; fill-opacity: 0; }
-      80% { fill-opacity: 1; }
-      100% { stroke-dashoffset: 0; fill-opacity: 1; }
+    @keyframes reveal {
+      0% { transform: scaleX(0); }
+      100% { transform: scaleX(1); }
     }
     @keyframes glow {
-      0%, 100% { filter: drop-shadow(0 0 6px rgba(124,92,255,0.5)) drop-shadow(0 0 20px rgba(124,92,255,0.25)); }
-      50% { filter: drop-shadow(0 0 14px rgba(124,92,255,0.8)) drop-shadow(0 0 40px rgba(124,92,255,0.4)); }
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(123,47,219,0.5)) drop-shadow(0 0 20px rgba(123,47,219,0.25)); }
+      50% { filter: drop-shadow(0 0 14px rgba(123,47,219,0.8)) drop-shadow(0 0 40px rgba(123,47,219,0.4)); }
+    }
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
     }
     @keyframes tagline-in {
       0%, 85% { opacity: 0; }
       100% { opacity: 1; }
     }
+    .logo-group {
+      animation: glow 3s ease-in-out 1.8s infinite;
+    }
     .logo-text {
-      animation: draw 2.2s ease-out forwards, glow 3s ease-in-out 2.2s infinite;
-      stroke-dasharray: 800;
-      stroke-dashoffset: 800;
-      fill-opacity: 0;
+      animation: fade-in 0.8s ease-out forwards;
+    }
+    .reveal-rect {
+      transform-origin: left;
+      animation: reveal 1.6s ease-out forwards;
     }
     .tagline {
       opacity: 0;
@@ -27,12 +33,17 @@
   </style>
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#7C5CFF"/>
+      <stop offset="0%" stop-color="#7B2FDB"/>
       <stop offset="50%" stop-color="#00E5FF"/>
-      <stop offset="100%" stop-color="#7C5CFF"/>
+      <stop offset="100%" stop-color="#7B2FDB"/>
     </linearGradient>
+    <clipPath id="reveal">
+      <rect class="reveal-rect" x="0" y="0" width="480" height="80"/>
+    </clipPath>
   </defs>
   <rect width="480" height="80" rx="16" fill="#0F1221"/>
-  <text class="logo-text" x="240" y="50" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-weight="900" font-size="52" letter-spacing="-1" fill="url(#g)" stroke="#7C5CFF" stroke-width="1.2">Story Wars</text>
+  <g class="logo-group">
+    <text class="logo-text" x="240" y="50" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-weight="900" font-size="52" letter-spacing="-1" fill="url(#g)" clip-path="url(#reveal)">Story Wars</text>
+  </g>
   <text class="tagline" x="240" y="72" text-anchor="middle" font-family="Segoe UI,system-ui,sans-serif" font-weight="400" font-size="11" fill="#AAB0D6">Write stories. Guess authors. Win glory.</text>
 </svg>

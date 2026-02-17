@@ -23,7 +23,8 @@ const Overlay = styled.div`
 
 const Panel = styled.div`
   background: ${theme.colors.bgLight};
-  border-radius: ${theme.radii.md};
+  border: 1px solid ${theme.colors.textMuted}22;
+  border-radius: ${theme.radii.lg};
   padding: ${theme.space.lg};
   max-width: 380px;
   width: 100%;
@@ -55,7 +56,8 @@ const PlayerRow = styled.div`
   width: 100%;
   padding: ${theme.space.sm} ${theme.space.md};
   background: ${theme.colors.bgCard};
-  border-radius: ${theme.radii.sm};
+  border: 1px solid ${theme.colors.textMuted}11;
+  border-radius: ${theme.radii.md};
 `;
 
 const Avatar = styled.img`

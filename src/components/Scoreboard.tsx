@@ -16,7 +16,8 @@ const Row = styled.div<{ rank: number }>`
   gap: ${theme.space.md};
   padding: ${theme.space.md};
   background: ${theme.colors.bgCard};
-  border-radius: ${theme.radii.sm};
+  border: 1px solid ${theme.colors.textMuted}11;
+  border-radius: ${theme.radii.md};
   border-left: 4px solid
     ${(p) =>
       p.rank === 1
@@ -36,9 +37,10 @@ const Rank = styled.span`
 `;
 
 const Avatar = styled.img`
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: ${theme.radii.full};
+  background: ${theme.colors.bgLight};
 `;
 
 const Name = styled.span`

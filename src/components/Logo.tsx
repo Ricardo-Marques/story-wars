@@ -8,23 +8,23 @@ interface LogoProps {
   variant?: LogoVariant
 }
 
-// ── Variant A: Stroke Draw + Glow ──────────────────────────────────
-// The outline draws itself on, then fills in and pulses with a neon glow.
+// ── Variant A: Clip Reveal + Glow ──────────────────────────────────
+// A clip-path rect wipes across to reveal the text, then the glow pulses.
+// Uses clip-path instead of stroke-dasharray to avoid mobile rendering artifacts.
 
-const drawIn = keyframes`
-  0% { stroke-dashoffset: 600; opacity: 0.6; }
-  80% { stroke-dashoffset: 0; opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 1; }
+const revealClip = keyframes`
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
 `
 
-const fillIn = keyframes`
-  0%, 70% { fill-opacity: 0; }
-  100% { fill-opacity: 1; }
+const fadeIn = keyframes`
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 `
 
 const glowPulse = keyframes`
-  0%, 100% { filter: drop-shadow(0 0 6px ${theme.colors.primary}88) drop-shadow(0 0 20px ${theme.colors.primary}44); }
-  50% { filter: drop-shadow(0 0 12px ${theme.colors.primary}cc) drop-shadow(0 0 35px ${theme.colors.primary}66); }
+  0%, 100% { filter: drop-shadow(0 0 6px ${theme.colors.primaryLight}88) drop-shadow(0 0 20px ${theme.colors.primaryLight}44); }
+  50% { filter: drop-shadow(0 0 14px ${theme.colors.primaryLight}cc) drop-shadow(0 0 40px ${theme.colors.primaryLight}66); }
 `
 
 function DrawLogo() {
@@ -35,15 +35,27 @@ function DrawLogo() {
         width: 280px;
         height: auto;
         animation: ${glowPulse} 3s ease-in-out infinite;
-        animation-delay: 1.8s;
+        animation-delay: 1.6s;
       `}
     >
       <defs>
         <linearGradient id="neon-draw" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor={theme.colors.primary} />
+          <stop offset="0%" stopColor={theme.colors.primaryLight} />
           <stop offset="50%" stopColor={theme.colors.secondary} />
-          <stop offset="100%" stopColor={theme.colors.primary} />
+          <stop offset="100%" stopColor={theme.colors.primaryLight} />
         </linearGradient>
+        <clipPath id="reveal-clip">
+          <rect
+            x="0"
+            y="0"
+            width="340"
+            height="50"
+            css={css`
+              transform-origin: left;
+              animation: ${revealClip} 1.4s ease-out forwards;
+            `}
+          />
+        </clipPath>
       </defs>
       <text
         x="170"
@@ -54,14 +66,9 @@ function DrawLogo() {
         fontSize="46"
         letterSpacing="-1"
         fill="url(#neon-draw)"
-        stroke={theme.colors.primary}
-        strokeWidth="1.5"
-        strokeDasharray="600"
-        strokeDashoffset="600"
+        clipPath="url(#reveal-clip)"
         css={css`
-          animation:
-            ${drawIn} 1.8s ease-out forwards,
-            ${fillIn} 2s ease-out forwards;
+          animation: ${fadeIn} 0.6s ease-out forwards;
         `}
       >
         Story Wars
@@ -115,9 +122,9 @@ function FlickerLogo() {
           </feMerge>
         </filter>
         <linearGradient id="neon-flick" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor={theme.colors.primary} />
+          <stop offset="0%" stopColor={theme.colors.primaryLight} />
           <stop offset="60%" stopColor={theme.colors.secondary} />
-          <stop offset="100%" stopColor={theme.colors.primary} />
+          <stop offset="100%" stopColor={theme.colors.primaryLight} />
         </linearGradient>
       </defs>
       {letters.map((letter, i) => (
@@ -159,15 +166,15 @@ function SweepLogo() {
       css={css`
         width: 280px;
         height: auto;
-        filter: drop-shadow(0 0 8px ${theme.colors.primary}66)
-          drop-shadow(0 0 25px ${theme.colors.primary}33);
+        filter: drop-shadow(0 0 8px ${theme.colors.primaryLight}66)
+          drop-shadow(0 0 25px ${theme.colors.primaryLight}33);
       `}
     >
       <defs>
         <linearGradient id="neon-base" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor={theme.colors.primary} />
+          <stop offset="0%" stopColor={theme.colors.primaryLight} />
           <stop offset="50%" stopColor={theme.colors.secondary} />
-          <stop offset="100%" stopColor={theme.colors.primary} />
+          <stop offset="100%" stopColor={theme.colors.primaryLight} />
         </linearGradient>
         <linearGradient id="sweep-highlight" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="white" stopOpacity="0" />

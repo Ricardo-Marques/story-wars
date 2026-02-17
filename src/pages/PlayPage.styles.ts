@@ -8,14 +8,16 @@ export const RevealBox = styled.div`
   gap: ${theme.space.sm};
   padding: ${theme.space.lg};
   background: ${theme.colors.bgCard};
+  border: 1px solid ${theme.colors.textMuted}11;
   border-radius: ${theme.radii.md};
   width: 100%;
 `
 
 export const RevealAvatar = styled.img`
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: ${theme.radii.full};
+  background: ${theme.colors.bgLight};
 `
 
 export const RevealName = styled.span`
@@ -50,10 +52,11 @@ export const TopBar = styled.div`
 
 export const MuteBtn = styled.button`
   background: ${theme.colors.bgCard};
-  border-radius: ${theme.radii.sm};
+  border-radius: ${theme.radii.md};
   padding: ${theme.space.xs} ${theme.space.sm};
   font-size: 1.1rem;
   color: ${theme.colors.textMuted};
+  transition: all 0.2s ease;
   &:hover {
     background: ${theme.colors.bgLight};
   }
@@ -73,14 +76,15 @@ export const ScoreRow = styled.div<{ highlighted?: boolean }>`
   padding: ${theme.space.sm} ${theme.space.md};
   background: ${(p) =>
     p.highlighted ? `${theme.colors.primary}22` : theme.colors.bgCard};
-  border-radius: ${theme.radii.sm};
-  ${(p) => p.highlighted && `border: 1px solid ${theme.colors.primary}44;`}
+  border-radius: ${theme.radii.md};
+  border: 1px solid ${(p) => p.highlighted ? `${theme.colors.primary}44` : `${theme.colors.textMuted}11`};
 `
 
 export const ScoreAvatar = styled.img`
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: ${theme.radii.full};
+  background: ${theme.colors.bgLight};
 `
 
 export const ScorePlayerName = styled.span`

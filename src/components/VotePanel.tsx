@@ -22,15 +22,17 @@ const VoteBtn = styled.button<{ voted?: boolean; disabled?: boolean }>`
   align-items: center;
   gap: ${theme.space.sm};
   padding: ${theme.space.sm} ${theme.space.md};
-  border-radius: ${theme.radii.sm};
+  border-radius: ${theme.radii.md};
   background: ${(p) => (p.voted ? theme.colors.primary : theme.colors.bgCard)};
+  border: 1px solid ${(p) => (p.voted ? `${theme.colors.primaryLight}44` : `${theme.colors.textMuted}11`)};
   color: ${theme.colors.text};
   font-size: 0.95rem;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
   opacity: ${(p) => (p.disabled ? 0.5 : 1)};
   pointer-events: ${(p) => (p.disabled ? 'none' : 'auto')};
   &:hover {
     background: ${(p) => (p.voted ? theme.colors.primary : theme.colors.bgLight)};
+    transform: translateY(-1px);
   }
 `;
 
@@ -48,14 +50,18 @@ const VoteRow = styled.div`
 
 const LockBtn = styled.button`
   padding: ${theme.space.xs} ${theme.space.md};
-  border-radius: ${theme.radii.sm};
+  border-radius: ${theme.radii.md};
   background: ${theme.colors.success};
-  color: ${theme.colors.text};
+  color: ${theme.colors.bg};
   font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
-  transition: opacity 0.15s;
-  &:hover { opacity: 0.85; }
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+  &:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+  }
 `;
 
 const FinalizedLabel = styled.div`

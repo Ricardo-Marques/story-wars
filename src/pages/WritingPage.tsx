@@ -37,8 +37,9 @@ const WaitingList = styled.div`
 
 const WaitingName = styled.span`
   background: ${theme.colors.bgCard};
+  border: 1px solid ${theme.colors.textMuted}11;
   padding: ${theme.space.xs} ${theme.space.sm};
-  border-radius: ${theme.radii.sm};
+  border-radius: ${theme.radii.md};
   font-size: 0.85rem;
   color: ${theme.colors.textMuted};
 `;

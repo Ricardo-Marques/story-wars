@@ -1,8 +1,8 @@
 import { createAvatar } from '@dicebear/core';
-import { adventurer } from '@dicebear/collection';
+import { lorelei } from '@dicebear/collection';
 
 export function getAvatarSvg(seed: string): string {
-  const avatar = createAvatar(adventurer, {
+  const avatar = createAvatar(lorelei, {
     seed,
     size: 80,
   });

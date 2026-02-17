@@ -16,14 +16,17 @@ const PlayerRow = styled.div<{ dimmed?: boolean }>`
   gap: ${theme.space.sm};
   padding: ${theme.space.sm} ${theme.space.md};
   background: ${theme.colors.bgCard};
-  border-radius: ${theme.radii.sm};
+  border: 1px solid ${theme.colors.textMuted}11;
+  border-radius: ${theme.radii.md};
   opacity: ${(p) => (p.dimmed ? 0.5 : 1)};
+  transition: opacity 0.2s ease;
 `;
 
 const Avatar = styled.img`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: ${theme.radii.full};
+  background: ${theme.colors.bgLight};
 `;
 
 const Name = styled.span`
@@ -35,7 +38,9 @@ const Badge = styled.span`
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: ${theme.radii.full};
-  background: ${theme.colors.primary};
+  background: ${theme.colors.primaryLight}33;
+  color: ${theme.colors.primaryLight};
+  letter-spacing: 0.3px;
 `;
 
 const Score = styled.span`

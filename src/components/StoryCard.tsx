@@ -6,6 +6,7 @@ import { TOPICS } from '../data/topics';
 
 const Card = styled.div`
   background: ${theme.colors.bgCard};
+  border: 1px solid ${theme.colors.textMuted}11;
   border-radius: ${theme.radii.md};
   padding: ${theme.space.lg};
   width: 100%;

@@ -15,7 +15,8 @@ const RulesOverlay = styled.div`
 
 const RulesPanel = styled.div`
   background: ${theme.colors.bgLight};
-  border-radius: ${theme.radii.md};
+  border: 1px solid ${theme.colors.textMuted}22;
+  border-radius: ${theme.radii.lg};
   padding: ${theme.space.lg};
   max-width: 420px;
   width: 100%;

@@ -1,7 +1,7 @@
 export const theme = {
   colors: {
-    primary: '#7C5CFF',
-    primaryLight: '#9D85FF',
+    primary: '#3e08a3',
+    primaryLight: '#7B2FDB',
     secondary: '#00E5FF',
     accent: '#FF4D6D',
     bg: '#0F1221',
@@ -10,7 +10,7 @@ export const theme = {
     text: '#FFFFFF',
     textMuted: '#AAB0D6',
     success: '#2BFF88',
-    warning: '#fdcb6e',
+    warning: '#FFD93D',
     error: '#FF4D6D',
   },
   fonts: {
@@ -18,9 +18,9 @@ export const theme = {
     heading: "'Segoe UI', system-ui, -apple-system, sans-serif",
   },
   radii: {
-    sm: '8px',
-    md: '12px',
-    lg: '20px',
+    sm: '10px',
+    md: '14px',
+    lg: '22px',
     full: '9999px',
   },
   space: {

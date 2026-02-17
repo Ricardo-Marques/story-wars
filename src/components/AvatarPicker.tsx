@@ -9,21 +9,24 @@ const Wrap = styled.div`
 `;
 
 const AvatarImg = styled.img`
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: ${theme.radii.full};
-  background: ${theme.colors.bgCard};
-  border: 2px solid ${theme.colors.primary};
+  background: ${theme.colors.bgLight};
+  border: 2px solid ${theme.colors.primaryLight}44;
 `;
 
 const RandomBtn = styled.button`
   padding: ${theme.space.sm} ${theme.space.md};
-  border-radius: ${theme.radii.sm};
+  border-radius: ${theme.radii.md};
   background: ${theme.colors.bgCard};
+  border: 1px solid ${theme.colors.textMuted}22;
   color: ${theme.colors.text};
   font-size: 0.85rem;
+  transition: all 0.2s ease;
   &:hover {
-    background: ${theme.colors.primary};
+    background: ${theme.colors.primaryLight}22;
+    border-color: ${theme.colors.primaryLight}44;
   }
 `;
 

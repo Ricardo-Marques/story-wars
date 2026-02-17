@@ -28,8 +28,8 @@ export const ErrorMsg = styled.div`
 
 export const NoticeMsg = styled.div`
   background: ${theme.colors.warning}22;
-  border: 1px solid ${theme.colors.warning};
-  border-radius: ${theme.radii.sm};
+  border: 1px solid ${theme.colors.warning}44;
+  border-radius: ${theme.radii.md};
   padding: ${theme.space.sm} ${theme.space.md};
   color: ${theme.colors.warning};
   font-size: 0.85rem;
@@ -39,8 +39,8 @@ export const NoticeMsg = styled.div`
 
 export const RoomBadge = styled.div`
   background: ${theme.colors.bgCard};
-  border: 2px solid ${theme.colors.primary};
-  border-radius: ${theme.radii.md};
+  border: 2px solid ${theme.colors.primaryLight}44;
+  border-radius: ${theme.radii.lg};
   padding: ${theme.space.md} ${theme.space.lg};
   text-align: center;
 `
@@ -60,8 +60,8 @@ export const RoomCodeValue = styled.div`
 
 export const ResumeBox = styled.div`
   background: ${theme.colors.bgCard};
-  border: 2px solid ${theme.colors.warning};
-  border-radius: ${theme.radii.md};
+  border: 2px solid ${theme.colors.warning}44;
+  border-radius: ${theme.radii.lg};
   padding: ${theme.space.md};
   display: flex;
   flex-direction: column;

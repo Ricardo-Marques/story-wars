@@ -39,7 +39,7 @@ const Value = styled.span`
 
 const Slider = styled.input`
   flex: 1;
-  accent-color: ${theme.colors.primary};
+  accent-color: ${theme.colors.primaryLight};
 `;
 
 const Info = styled.p`

@@ -13,8 +13,9 @@ const CodeBox = styled.div`
   align-items: center;
   gap: ${theme.space.md};
   background: ${theme.colors.bgCard};
+  border: 1px solid ${theme.colors.textMuted}11;
   padding: ${theme.space.md} ${theme.space.lg};
-  border-radius: ${theme.radii.sm};
+  border-radius: ${theme.radii.md};
 `;
 
 const Code = styled.span`
@@ -33,16 +34,19 @@ const ShareRow = styled.div`
 
 const ShareBtn = styled.button`
   padding: ${theme.space.sm} ${theme.space.lg};
-  border-radius: ${theme.radii.sm};
+  border-radius: ${theme.radii.md};
   color: ${theme.colors.text};
   font-size: 0.9rem;
   font-weight: 600;
+  letter-spacing: 0.2px;
   display: flex;
   align-items: center;
   gap: 6px;
   background: ${theme.colors.primary};
+  transition: all 0.2s ease;
   &:hover {
     opacity: 0.85;
+    transform: translateY(-1px);
   }
 `;
 
@@ -58,8 +62,8 @@ const CopiedFeedback = styled.span`
 
 const CopiedBanner = styled.div`
   background: ${theme.colors.success}22;
-  border: 1px solid ${theme.colors.success};
-  border-radius: ${theme.radii.sm};
+  border: 1px solid ${theme.colors.success}44;
+  border-radius: ${theme.radii.md};
   padding: ${theme.space.sm} ${theme.space.md};
   color: ${theme.colors.success};
   font-size: 0.85rem;
