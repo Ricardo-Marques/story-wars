@@ -1,11 +1,11 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import styled from '@emotion/styled';
 import { theme } from '../styles/theme';
 import { Button } from './Button';
 import { gameStore } from '../stores/GameStore';
 import { connectionStore } from '../stores/ConnectionStore';
-import { hostAction } from '../engine/HostEngine';
+import { hostAction, hostEndGame } from '../engine/HostEngine';
 import { sendAction } from '../engine/ClientEngine';
 import { clearGameState } from '../utils/storage';
 import { getAvatarDataUri } from '../utils/avatar';
@@ -88,6 +88,7 @@ const Actions = styled.div`
 
 export const DisconnectOverlay = observer(function DisconnectOverlay() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { players, roomCode, isHost, isLeader, phase } = gameStore;
   const isClient = !isHost;
   const excluded = gameStore.state.excludedPlayers || [];
@@ -103,6 +104,11 @@ export const DisconnectOverlay = observer(function DisconnectOverlay() {
   const disconnectedPlayers = players.filter(
     (p) => !p.connected && !excluded.includes(p.id),
   );
+
+  // Don't show on entry points (user may be joining a new game)
+  const isEntryPoint =
+    location.pathname === '/' || location.pathname.startsWith('/join/');
+  if (isEntryPoint) return null;
 
   // Don't show during lobby or when no active game
   if (!roomCode || phase === 'LOBBY') return null;
@@ -122,10 +128,17 @@ export const DisconnectOverlay = observer(function DisconnectOverlay() {
   }
 
   function handleLeave() {
-    clearGameState();
-    connectionStore.disconnect();
-    gameStore.reset();
-    navigate('/');
+    if (isHost) {
+      // Notify all clients that the host is ending the game
+      hostEndGame();
+      // Navigate after a brief delay to let the broadcast send
+      setTimeout(() => navigate('/'), 400);
+    } else {
+      clearGameState();
+      connectionStore.disconnect();
+      gameStore.reset();
+      navigate('/');
+    }
   }
 
   return (

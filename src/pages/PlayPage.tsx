@@ -184,6 +184,7 @@ export const PlayPage = observer(function PlayPage() {
     let cancelled = false
     let pauseTimer: ReturnType<typeof setTimeout> | null = null
     let fallbackInterval: ReturnType<typeof setInterval> | null = null
+    let safetyTimeout: ReturnType<typeof setTimeout> | null = null
 
     const topicId = config.topicIds[playState.currentTopicIndex]
     const topicMeta = TOPICS.find((t) => t.id === topicId)
@@ -194,6 +195,16 @@ export const PlayPage = observer(function PlayPage() {
     const ttsOn = isTtsEnabled()
 
     if (ttsOn) {
+      // Safety: force-complete reveal if TTS gets stuck (known browser bug)
+      // Generous estimate: ~3 chars/sec speech + topic time + pauses + 10s buffer
+      const safetyMs =
+        (topicText.length + currentStory.text.length) * 350 + 10000
+      safetyTimeout = setTimeout(() => {
+        if (!cancelled && currentStory) {
+          setRevealUpTo(currentStory.text.length)
+        }
+      }, safetyMs)
+
       // TTS enabled: speak topic → pause → speak story with boundary-driven reveal
       speak(topicText, {
         onEnd: () => {
@@ -234,6 +245,7 @@ export const PlayPage = observer(function PlayPage() {
       cancelled = true
       if (pauseTimer) clearTimeout(pauseTimer)
       if (fallbackInterval) clearInterval(fallbackInterval)
+      if (safetyTimeout) clearTimeout(safetyTimeout)
       stopSpeaking()
     }
   }, [storyKey]) // eslint-disable-line react-hooks/exhaustive-deps

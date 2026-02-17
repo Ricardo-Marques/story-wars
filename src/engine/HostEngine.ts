@@ -58,7 +58,7 @@ function startHeartbeat() {
   stopHeartbeat();
   heartbeatInterval = setInterval(() => {
     connectionStore.broadcast({ type: 'PING' });
-  }, 3000);
+  }, 5000);
 }
 
 function stopHeartbeat() {
@@ -655,6 +655,19 @@ export function hostPlayAgain() {
     playerId: gameStore.myPlayerId,
     isHost: true,
   });
+}
+
+// Host intentionally ends the game — notifies all clients
+export function hostEndGame() {
+  connectionStore.broadcast({ type: 'GAME_ENDED', reason: 'The host ended the game.' });
+  stopHeartbeat();
+  clearVoteTimer();
+  clearGameState();
+  // Brief delay so the broadcast has time to send before destroying peer
+  setTimeout(() => {
+    connectionStore.disconnect();
+    gameStore.reset();
+  }, 300);
 }
 
 function shuffle<T>(arr: T[]): void {

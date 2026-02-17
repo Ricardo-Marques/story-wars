@@ -99,7 +99,21 @@ export const SetupPage = observer(function SetupPage() {
     return (
       <PageWrap>
         <Subtitle>Leader is picking topics...</Subtitle>
-        <Info>{config.topicIds.length} topics selected</Info>
+
+        <TopicSelector selected={config.topicIds} readOnly />
+
+        <Controls>
+          <SliderRow>
+            <Label>Stories per topic</Label>
+            <Value>{config.storiesPerPrompt}</Value>
+          </SliderRow>
+          <SliderRow>
+            <Label>Vote timer</Label>
+            <Value>{formatTime(config.voteTimerSeconds)}</Value>
+          </SliderRow>
+        </Controls>
+
+        <Info>{config.topicIds.length} topic{config.topicIds.length !== 1 ? 's' : ''} selected</Info>
       </PageWrap>
     );
   }

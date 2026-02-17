@@ -1,7 +1,7 @@
 import { connectionStore } from '../stores/ConnectionStore';
 import { gameStore } from '../stores/GameStore';
 import type { HostMessage, ClientMessage } from '../types/protocol';
-import { saveSession, saveGameState } from '../utils/storage';
+import { saveSession, saveGameState, clearGameState } from '../utils/storage';
 
 export function initClient() {
   connectionStore.onHostMessage = handleHostMessage;
@@ -32,6 +32,13 @@ function handleHostMessage(msg: HostMessage) {
       break;
     case 'PING':
       connectionStore.handlePing();
+      break;
+    case 'GAME_ENDED':
+      clearGameState();
+      connectionStore.disconnect();
+      gameStore.setGameEndedReason(msg.reason);
+      gameStore.reset();
+      // PhaseRouter will redirect to / since roomCode is now empty
       break;
   }
 }

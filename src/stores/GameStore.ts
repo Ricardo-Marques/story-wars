@@ -6,6 +6,7 @@ class GameStoreClass {
   state: GameState = createInitialState('');
   myPlayerId: string = '';
   isHost: boolean = false;
+  gameEndedReason: string = '';
 
   constructor() {
     makeAutoObservable(this);
@@ -103,11 +104,18 @@ class GameStoreClass {
     });
   }
 
+  setGameEndedReason(reason: string) {
+    runInAction(() => {
+      this.gameEndedReason = reason;
+    });
+  }
+
   reset() {
     runInAction(() => {
       this.state = createInitialState('');
       this.myPlayerId = '';
       this.isHost = false;
+      // Don't clear gameEndedReason — it persists until shown on home page
     });
   }
 }

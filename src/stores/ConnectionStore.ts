@@ -161,6 +161,9 @@ class ConnectionStoreClass {
 
     conn.on('close', () => {
       runInAction(() => {
+        // Only react if this is still the active connection — a newer
+        // connection may have replaced it (e.g. after heartbeat reconnect)
+        if (this.hostConnection !== conn) return;
         this.hostConnection = null;
         // Only auto-reconnect if we have a room code (active game)
         if (this.roomCode && this.peer?.open) {
@@ -194,6 +197,12 @@ class ConnectionStoreClass {
 
       conn.on('open', () => {
         clearTimeout(timeout);
+        // Close stale connection before replacing to prevent its close
+        // handler from interfering with the new connection
+        const staleConn = this.hostConnection;
+        if (staleConn && staleConn !== conn) {
+          try { staleConn.close(); } catch { /* ignore */ }
+        }
         runInAction(() => {
           this.hostConnection = conn;
           this.status = 'connected';
@@ -265,15 +274,19 @@ class ConnectionStoreClass {
     this.lastHostPingAt = Date.now();
     this.heartbeatMonitor = setInterval(() => {
       if (this.status !== 'connected') return;
-      if (Date.now() - this.lastHostPingAt > 8000) {
+      if (Date.now() - this.lastHostPingAt > 15000) {
         // Host ping timeout — treat as disconnected
+        const staleConn = this.hostConnection;
         runInAction(() => {
           this.hostConnection = null;
           this.status = 'reconnecting';
         });
+        // Close the stale connection so its close handler doesn't
+        // interfere with a future reconnection
+        try { staleConn?.close(); } catch { /* ignore */ }
         this.startAutoReconnect();
       }
-    }, 3000);
+    }, 5000);
   }
 
   stopHeartbeatMonitor() {

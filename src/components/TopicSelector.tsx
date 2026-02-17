@@ -11,7 +11,7 @@ const Grid = styled.div`
   overflow-y: auto;
 `;
 
-const TopicBtn = styled.button<{ selected: boolean }>`
+const TopicBtn = styled.button<{ selected: boolean; readOnly?: boolean }>`
   display: flex;
   align-items: center;
   gap: ${theme.space.sm};
@@ -22,9 +22,14 @@ const TopicBtn = styled.button<{ selected: boolean }>`
   font-size: 0.8rem;
   text-align: left;
   transition: background 0.15s;
-  &:hover {
-    background: ${(p) => (p.selected ? theme.colors.primary : theme.colors.bgLight)};
-  }
+  ${(p) => p.readOnly ? `
+    cursor: default;
+    opacity: ${p.selected ? 1 : 0.6};
+  ` : `
+    &:hover {
+      background: ${p.selected ? theme.colors.primary : theme.colors.bgLight};
+    }
+  `}
 `;
 
 const Emoji = styled.span`
@@ -34,11 +39,13 @@ const Emoji = styled.span`
 
 interface Props {
   selected: string[];
-  onChange: (ids: string[]) => void;
+  onChange?: (ids: string[]) => void;
+  readOnly?: boolean;
 }
 
-export function TopicSelector({ selected, onChange }: Props) {
+export function TopicSelector({ selected, onChange, readOnly }: Props) {
   const toggle = (id: string) => {
+    if (readOnly || !onChange) return;
     if (selected.includes(id)) {
       onChange(selected.filter((s) => s !== id));
     } else {
@@ -52,6 +59,7 @@ export function TopicSelector({ selected, onChange }: Props) {
         <TopicBtn
           key={t.id}
           selected={selected.includes(t.id)}
+          readOnly={readOnly}
           onClick={() => toggle(t.id)}
         >
           <Emoji>{t.emoji}</Emoji>

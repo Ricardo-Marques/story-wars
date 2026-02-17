@@ -76,3 +76,8 @@ Make the following improvements
 2- The countdown should only start once the story has been fully ready
 
 Ask questions if you need to on how to achieve any of these requests.
+
+# Round 10
+
+Make the following improvements
+1- When the leader exits the game, the other players should have their game exited too, with a notification that the leader exited the game

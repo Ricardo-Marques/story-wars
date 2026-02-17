@@ -21,6 +21,8 @@ export const PhaseRouter = observer(function PhaseRouter() {
 
   useEffect(() => {
     const onGamePage = GAME_PAGES.has(location.pathname);
+    const isEntryPoint =
+      location.pathname === '/' || location.pathname.startsWith('/join/');
 
     // If on a game page but no active game, redirect to home for resume flow
     if (!roomCode && onGamePage) {
@@ -28,11 +30,14 @@ export const PhaseRouter = observer(function PhaseRouter() {
       return;
     }
 
-    // If in active game, navigate to correct phase
+    // Don't force redirect from entry points — user may be joining a new game
+    if (isEntryPoint) return;
+
+    // If in active game on a game page, navigate to correct phase
     if (!roomCode) return;
 
     const target = PHASE_ROUTES[phase];
-    if (target && location.pathname !== target) {
+    if (target && onGamePage && location.pathname !== target) {
       navigate(target);
     }
   }, [phase, roomCode, navigate, location.pathname]);

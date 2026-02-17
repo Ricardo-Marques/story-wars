@@ -21,4 +21,5 @@ export type HostMessage =
   | { type: 'PLAYER_LEFT'; playerId: string }
   | { type: 'STATE_UPDATE'; state: GameState }
   | { type: 'ERROR'; message: string }
-  | { type: 'PING' };
+  | { type: 'PING' }
+  | { type: 'GAME_ENDED'; reason: string };

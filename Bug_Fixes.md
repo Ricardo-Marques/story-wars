@@ -84,3 +84,25 @@ Fix the following bugs:
 2- The app still behaves weirdly when someone disconnects while collecting stories. The game continue saying that it's waiting for that user which disconnected, and when they reconnect they should continue proving stories for topics they haven't provided stories for yet.
 
 Ask questions if you need to on how to achieve any of these requests.
+
+# Round 12
+
+Fix the following bugs:
+1- With the new hash router, if I try to go to a new game while someone is disconnected in my current game, I am stuck on that disconnect page. Allow entering in a new link to always send me to the new room.
+2- In one instance, I saw the countdown never start after a story was read. Fix that.
+
+Ask questions if you need to on how to achieve any of these requests.
+
+# Round 13
+
+Fix the following bugs:
+1- With the latest set of changes, when a non leader joins a room, they are kicked to the home screen and then have to hit rejoin. They should instead go into the waiting room as they did before.
+
+Ask questions if you need to on how to achieve any of these requests.
+
+# Round 14
+
+Fix the following bugs:
+1- When the leader disconnects, everyone is kicked out now. I want it to kick players to the homescreen only if the leader actually presses "leave game", not if they are disconnected.
+
+Ask questions if you need to on how to achieve any of these requests.

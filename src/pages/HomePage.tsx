@@ -10,6 +10,7 @@ import { gameStore } from '../stores/GameStore'
 import { initHost, resumeHost, hostJoin } from '../engine/HostEngine'
 import { initClient, sendAction } from '../engine/ClientEngine'
 import { generateRoomCode, isValidRoomCode } from '../utils/roomCode'
+import { createInitialState } from '../types/game'
 import { randomSeed } from '../utils/avatar'
 import {
   loadPlayerName,
@@ -19,6 +20,7 @@ import {
   saveSession,
   loadSession,
   loadGameState,
+  clearGameState,
 } from '../utils/storage'
 
 const Form = styled.div`
@@ -43,6 +45,17 @@ const Divider = styled.div`
 const ErrorMsg = styled.div`
   color: ${theme.colors.error};
   font-size: 0.85rem;
+  text-align: center;
+`
+
+const NoticeMsg = styled.div`
+  background: ${theme.colors.warning}22;
+  border: 1px solid ${theme.colors.warning};
+  border-radius: ${theme.radii.sm};
+  padding: ${theme.space.sm} ${theme.space.md};
+  color: ${theme.colors.warning};
+  font-size: 0.85rem;
+  font-weight: 600;
   text-align: center;
 `
 
@@ -174,6 +187,15 @@ export const HomePage = observer(function HomePage() {
   const [savedSession] = useState(() => loadSession())
   const [savedState] = useState(() => loadGameState())
   const [showRules, setShowRules] = useState(false)
+  const gameEndedReason = gameStore.gameEndedReason
+
+  // Clear the "game ended" notification after 5 seconds
+  useEffect(() => {
+    if (gameEndedReason) {
+      const timer = setTimeout(() => gameStore.setGameEndedReason(''), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [gameEndedReason])
 
   useEffect(() => {
     savePlayerName(name)
@@ -235,6 +257,9 @@ export const HomePage = observer(function HomePage() {
     setLoading(true)
     setError('')
     try {
+      // Clear any existing game before starting fresh
+      connectionStore.disconnect()
+      clearGameState()
       const code = generateRoomCode()
       await connectionStore.createHost(code)
       initHost(code)
@@ -257,6 +282,12 @@ export const HomePage = observer(function HomePage() {
     setLoading(true)
     setError('')
     try {
+      // Clear any existing game before joining a new one
+      connectionStore.disconnect()
+      clearGameState()
+      // Set fresh LOBBY state with room code so PhaseRouter doesn't
+      // kick us while waiting for the WELCOME message from the host
+      gameStore.setState(createInitialState(code))
       await connectionStore.connectToHost(code)
       initClient()
       gameStore.setIsHost(false)
@@ -274,6 +305,8 @@ export const HomePage = observer(function HomePage() {
     return (
       <PageWrap>
         <Subtitle>You've been invited!</Subtitle>
+
+        {gameEndedReason && <NoticeMsg>{gameEndedReason}</NoticeMsg>}
 
         <RoomBadge>
           <RoomCodeLabel>
@@ -307,6 +340,8 @@ export const HomePage = observer(function HomePage() {
   return (
     <PageWrap>
       <Subtitle>Write stories. Guess authors. Win glory.</Subtitle>
+
+      {gameEndedReason && <NoticeMsg>{gameEndedReason}</NoticeMsg>}
 
       {canResume && (
         <ResumeBox>
