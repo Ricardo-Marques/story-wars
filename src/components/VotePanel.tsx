@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
 import { theme } from '../styles/theme';
-import { Button } from './Button';
 import { getAvatarDataUri } from '../utils/avatar';
 import type { Player } from '../types/game';
 
@@ -18,6 +17,7 @@ const Label = styled.div`
 `;
 
 const VoteBtn = styled.button<{ voted?: boolean; disabled?: boolean }>`
+  flex: 1;
   display: flex;
   align-items: center;
   gap: ${theme.space.sm};
@@ -40,6 +40,24 @@ const Avatar = styled.img`
   border-radius: ${theme.radii.full};
 `;
 
+const VoteRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.space.sm};
+`;
+
+const LockBtn = styled.button`
+  padding: ${theme.space.xs} ${theme.space.md};
+  border-radius: ${theme.radii.sm};
+  background: ${theme.colors.success};
+  color: ${theme.colors.text};
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.85; }
+`;
+
 const FinalizedLabel = styled.div`
   font-size: 0.85rem;
   color: ${theme.colors.success};
@@ -60,19 +78,20 @@ export function VotePanel({ players, myVoteTargetId, finalized, onVote, onFinali
     <Panel>
       <Label>Who wrote this?</Label>
       {players.map((p) => (
-        <VoteBtn
-          key={p.id}
-          voted={myVoteTargetId === p.id}
-          disabled={finalized}
-          onClick={() => onVote(p.id)}
-        >
-          <Avatar src={getAvatarDataUri(p.avatarSeed)} alt={p.name} />
-          {p.name}
-        </VoteBtn>
+        <VoteRow key={p.id}>
+          <VoteBtn
+            voted={myVoteTargetId === p.id}
+            disabled={finalized}
+            onClick={() => onVote(p.id)}
+          >
+            <Avatar src={getAvatarDataUri(p.avatarSeed)} alt={p.name} />
+            {p.name}
+          </VoteBtn>
+          {myVoteTargetId === p.id && !finalized && (
+            <LockBtn onClick={onFinalize}>Lock In</LockBtn>
+          )}
+        </VoteRow>
       ))}
-      {myVoteTargetId && !finalized && (
-        <Button onClick={onFinalize}>Lock In</Button>
-      )}
       {finalized && (
         <FinalizedLabel>Vote locked in! Waiting for others...</FinalizedLabel>
       )}

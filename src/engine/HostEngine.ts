@@ -11,6 +11,7 @@ let voteTimerDuration: number = 0; // seconds remaining for current timer
 let voteTimerDelayTimeout: ReturnType<typeof setTimeout> | null = null;
 let voteTimerPendingDelay = false; // true while in the pre-vote delay phase
 let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+let readingTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function genId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -65,6 +66,37 @@ function stopHeartbeat() {
   if (heartbeatInterval) {
     clearInterval(heartbeatInterval);
     heartbeatInterval = null;
+  }
+}
+
+// --- Reading timeout (host-side safety net) ---
+
+function startReadingTimeout() {
+  clearReadingTimeout();
+  readingTimeout = setTimeout(() => {
+    readingTimeout = null;
+    const state = getState();
+    if (state.phase === 'PLAYING' && state.playState.subPhase === 'READING') {
+      // Auto-advance to VOTING — same as handleNext when subPhase is READING
+      mutate((s) => {
+        s.playState.subPhase = 'VOTING';
+        s.playState.finalizedVoters = [];
+        s.playState.voteTimerSecondsLeft = s.config.voteTimerSeconds;
+      });
+      voteTimerPendingDelay = true;
+      voteTimerDelayTimeout = setTimeout(() => {
+        voteTimerDelayTimeout = null;
+        voteTimerPendingDelay = false;
+        startVoteTimer();
+      }, 2000);
+    }
+  }, 45000);
+}
+
+function clearReadingTimeout() {
+  if (readingTimeout) {
+    clearTimeout(readingTimeout);
+    readingTimeout = null;
   }
 }
 
@@ -309,6 +341,7 @@ function startGame() {
     }
     s.stories = kept;
   });
+  startReadingTimeout();
 }
 
 function handleStartGame(playerId: string) {
@@ -446,6 +479,7 @@ function clearVoteTimer() {
   }
   voteTimerStartedAt = null;
   voteTimerDuration = 0;
+  clearReadingTimeout();
 }
 
 // --- Next / Reveal / Advance ---
@@ -461,6 +495,7 @@ function handleNext(playerId: string) {
   const { subPhase } = state.playState;
 
   if (subPhase === 'READING') {
+    clearReadingTimeout();
     mutate((s) => {
       s.playState.subPhase = 'VOTING';
       s.playState.finalizedVoters = [];
@@ -525,6 +560,7 @@ function advanceToNextStory() {
       s.playState.revealedAuthorId = null;
       s.playState.finalizedVoters = [];
     });
+    startReadingTimeout();
   } else {
     const nextTopicIndex = state.playState.currentTopicIndex + 1;
     if (nextTopicIndex < state.config.topicIds.length) {
@@ -535,6 +571,7 @@ function advanceToNextStory() {
         s.playState.revealedAuthorId = null;
         s.playState.finalizedVoters = [];
       });
+      startReadingTimeout();
     } else {
       mutate((s) => {
         s.phase = 'RESULTS';

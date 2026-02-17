@@ -7,8 +7,6 @@ const Grid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: ${theme.space.sm};
   width: 100%;
-  max-height: 400px;
-  overflow-y: auto;
 `;
 
 const TopicBtn = styled.button<{ selected: boolean; readOnly?: boolean }>`

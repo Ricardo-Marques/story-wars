@@ -137,6 +137,7 @@ export const PlayPage = observer(function PlayPage() {
   const [typewriterDone, setTypewriterDone] = useState(false)
   // Reveal position — driven by TTS boundaries or fallback timer
   const [revealUpTo, setRevealUpTo] = useState(0)
+  const revealRef = useRef(0)
   // Vote timer delay: show "Time to vote!" for 2s before countdown
   const [voteTimerReady, setVoteTimerReady] = useState(false)
   // Stable key for the current story so we know when it changes
@@ -150,6 +151,7 @@ export const PlayPage = observer(function PlayPage() {
       prevStoryKey.current = storyKey
       setTypewriterDone(false)
       setRevealUpTo(0)
+      revealRef.current = 0
     }
   }, [storyKey])
 
@@ -192,13 +194,15 @@ export const PlayPage = observer(function PlayPage() {
       ? `Topic ${playState.currentTopicIndex + 1}: ${topicMeta.text}`
       : ''
 
-    const ttsOn = isTtsEnabled()
+    const ttsOn = isTtsEnabled() && revealRef.current === 0
 
     if (ttsOn) {
       // Safety: force-complete reveal if TTS gets stuck (known browser bug)
       // Generous estimate: ~3 chars/sec speech + topic time + pauses + 10s buffer
-      const safetyMs =
-        (topicText.length + currentStory.text.length) * 350 + 10000
+      const safetyMs = Math.min(
+        (topicText.length + currentStory.text.length) * 100 + 5000,
+        30000
+      )
       safetyTimeout = setTimeout(() => {
         if (!cancelled && currentStory) {
           setRevealUpTo(currentStory.text.length)
@@ -213,10 +217,15 @@ export const PlayPage = observer(function PlayPage() {
             if (cancelled || !currentStory) return
             speak(currentStory.text, {
               onBoundary: (charIndex, charLength) => {
-                setRevealUpTo(charIndex + charLength)
+                const pos = charIndex + charLength
+                if (pos > revealRef.current) {
+                  revealRef.current = pos
+                  setRevealUpTo(pos)
+                }
               },
               onEnd: () => {
                 if (currentStory) {
+                  revealRef.current = currentStory.text.length
                   setRevealUpTo(currentStory.text.length)
                 }
               },
@@ -227,10 +236,11 @@ export const PlayPage = observer(function PlayPage() {
     } else {
       // TTS muted: reveal story text with a local timer
       const CHARS_PER_SECOND = 30
-      let revealed = 0
+      let revealed = revealRef.current
       fallbackInterval = setInterval(() => {
         if (cancelled) return
         revealed += 1
+        revealRef.current = revealed
         setRevealUpTo(revealed)
         if (currentStory && revealed >= currentStory.text.length) {
           if (fallbackInterval) {
@@ -248,7 +258,7 @@ export const PlayPage = observer(function PlayPage() {
       if (safetyTimeout) clearTimeout(safetyTimeout)
       stopSpeaking()
     }
-  }, [storyKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [storyKey, muted]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-advance from READING → VOTING once typewriter finishes (host only)
   useEffect(() => {
